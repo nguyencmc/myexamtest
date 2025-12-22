@@ -65,6 +65,51 @@ export type Database = {
         }
         Relationships: []
       }
+      exam_categories: {
+        Row: {
+          attempt_count: number | null
+          created_at: string
+          display_order: number | null
+          exam_count: number | null
+          icon_url: string | null
+          id: string
+          is_featured: boolean | null
+          name: string
+          question_count: number | null
+          rating: number | null
+          slug: string
+          subcategory_count: number | null
+        }
+        Insert: {
+          attempt_count?: number | null
+          created_at?: string
+          display_order?: number | null
+          exam_count?: number | null
+          icon_url?: string | null
+          id?: string
+          is_featured?: boolean | null
+          name: string
+          question_count?: number | null
+          rating?: number | null
+          slug: string
+          subcategory_count?: number | null
+        }
+        Update: {
+          attempt_count?: number | null
+          created_at?: string
+          display_order?: number | null
+          exam_count?: number | null
+          icon_url?: string | null
+          id?: string
+          is_featured?: boolean | null
+          name?: string
+          question_count?: number | null
+          rating?: number | null
+          slug?: string
+          subcategory_count?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
