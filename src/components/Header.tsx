@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, ChevronDown, LogOut, User } from "lucide-react";
+import { Menu, X, ChevronDown, LogOut, User, History } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -73,6 +73,12 @@ export const Header = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to="/history">
+                      <History className="w-4 h-4 mr-2" />
+                      Lịch sử làm bài
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem>
                     <User className="w-4 h-4 mr-2" />
                     Tài khoản

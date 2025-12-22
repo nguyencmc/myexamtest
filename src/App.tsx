@@ -11,6 +11,7 @@ import Exams from "./pages/Exams";
 import ExamCategoryDetail from "./pages/ExamCategoryDetail";
 import ExamDetail from "./pages/ExamDetail";
 import ExamTaking from "./pages/ExamTaking";
+import ExamHistory from "./pages/ExamHistory";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/exams/:slug" element={<ExamCategoryDetail />} />
             <Route path="/exam/:slug" element={<ExamDetail />} />
             <Route path="/exam/:slug/take" element={<ExamTaking />} />
+            <Route path="/history" element={<ExamHistory />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
