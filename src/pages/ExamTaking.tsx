@@ -108,7 +108,7 @@ const ExamTaking = () => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          handleSubmit();
+          setIsSubmitted(true);
           return 0;
         }
         return prev - 1;
@@ -117,6 +117,25 @@ const ExamTaking = () => {
 
     return () => clearInterval(timer);
   }, [timeLeft, isSubmitted]);
+
+  // Auto submit when time runs out
+  useEffect(() => {
+    if (isSubmitted && timeLeft === 0 && exam && questions && questions.length > 0) {
+      const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+      const correctCount = questions.filter(
+        (q) => answers[q.id] === q.correct_answer
+      ).length;
+
+      supabase.from('exam_attempts').insert({
+        exam_id: exam.id,
+        score: Math.round((correctCount / questions.length) * 100),
+        total_questions: questions.length,
+        correct_answers: correctCount,
+        time_spent_seconds: timeSpent,
+        answers: answers,
+      });
+    }
+  }, [isSubmitted, timeLeft, exam, questions, answers, startTime]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
