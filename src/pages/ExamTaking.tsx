@@ -1,0 +1,512 @@
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { 
+  Clock, 
+  ChevronLeft, 
+  ChevronRight, 
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Trophy,
+  RotateCcw,
+  Home,
+  List
+} from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+interface Question {
+  id: string;
+  question_text: string;
+  option_a: string;
+  option_b: string;
+  option_c: string | null;
+  option_d: string | null;
+  correct_answer: string;
+  explanation: string | null;
+  question_order: number;
+}
+
+interface Exam {
+  id: string;
+  title: string;
+  duration_minutes: number;
+  question_count: number;
+}
+
+const ExamTaking = () => {
+  const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
+  
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [showSubmitDialog, setShowSubmitDialog] = useState(false);
+  const [startTime] = useState(Date.now());
+
+  // Fetch exam details
+  const { data: exam, isLoading: examLoading } = useQuery({
+    queryKey: ['exam', slug],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('exams')
+        .select('*')
+        .eq('slug', slug)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data as Exam | null;
+    },
+  });
+
+  // Fetch questions
+  const { data: questions, isLoading: questionsLoading } = useQuery({
+    queryKey: ['questions', exam?.id],
+    queryFn: async () => {
+      if (!exam?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('questions')
+        .select('*')
+        .eq('exam_id', exam.id)
+        .order('question_order', { ascending: true });
+      
+      if (error) throw error;
+      return data as Question[];
+    },
+    enabled: !!exam?.id,
+  });
+
+  // Initialize timer
+  useEffect(() => {
+    if (exam?.duration_minutes && !isSubmitted) {
+      setTimeLeft(exam.duration_minutes * 60);
+    }
+  }, [exam?.duration_minutes, isSubmitted]);
+
+  // Timer countdown
+  useEffect(() => {
+    if (timeLeft <= 0 || isSubmitted) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleSubmit();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft, isSubmitted]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleAnswerSelect = (questionId: string, answer: string) => {
+    if (isSubmitted) return;
+    setAnswers((prev) => ({ ...prev, [questionId]: answer }));
+  };
+
+  const handleSubmit = useCallback(async () => {
+    if (!questions || !exam) return;
+    
+    setIsSubmitted(true);
+    setShowSubmitDialog(false);
+
+    const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+    const correctCount = questions.filter(
+      (q) => answers[q.id] === q.correct_answer
+    ).length;
+
+    // Save attempt to database
+    await supabase.from('exam_attempts').insert({
+      exam_id: exam.id,
+      score: Math.round((correctCount / questions.length) * 100),
+      total_questions: questions.length,
+      correct_answers: correctCount,
+      time_spent_seconds: timeSpent,
+      answers: answers,
+    });
+  }, [questions, exam, answers, startTime]);
+
+  const currentQuestion = questions?.[currentQuestionIndex];
+  const answeredCount = Object.keys(answers).length;
+  const progress = questions ? (answeredCount / questions.length) * 100 : 0;
+
+  // Calculate results
+  const correctCount = questions?.filter(
+    (q) => answers[q.id] === q.correct_answer
+  ).length || 0;
+  const scorePercent = questions ? Math.round((correctCount / questions.length) * 100) : 0;
+
+  const getOptionClass = (questionId: string, option: string) => {
+    const isSelected = answers[questionId] === option;
+    
+    if (!isSubmitted) {
+      return isSelected
+        ? 'border-primary bg-primary/10 ring-2 ring-primary'
+        : 'border-border hover:border-primary/50 hover:bg-muted/50';
+    }
+
+    const question = questions?.find((q) => q.id === questionId);
+    const isCorrect = question?.correct_answer === option;
+    const userSelected = answers[questionId] === option;
+
+    if (isCorrect) {
+      return 'border-green-500 bg-green-500/10 ring-2 ring-green-500';
+    }
+    if (userSelected && !isCorrect) {
+      return 'border-red-500 bg-red-500/10 ring-2 ring-red-500';
+    }
+    return 'border-border opacity-50';
+  };
+
+  if (examLoading || questionsLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex items-center justify-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!exam || !questions || questions.length === 0) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-20 text-center">
+          <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-foreground mb-4">Không tìm thấy đề thi</h1>
+          <Link to="/exams">
+            <Button>Quay lại danh sách</Button>
+          </Link>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Results screen
+  if (isSubmitted) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        
+        {/* Results Summary */}
+        <section className="py-12 bg-gradient-to-br from-primary/10 via-background to-accent/10">
+          <div className="container mx-auto px-4">
+            <div className="max-w-2xl mx-auto text-center">
+              <div className={`w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center ${
+                scorePercent >= 70 ? 'bg-green-500/20' : scorePercent >= 50 ? 'bg-yellow-500/20' : 'bg-red-500/20'
+              }`}>
+                <Trophy className={`w-12 h-12 ${
+                  scorePercent >= 70 ? 'text-green-500' : scorePercent >= 50 ? 'text-yellow-500' : 'text-red-500'
+                }`} />
+              </div>
+              
+              <h1 className="text-3xl font-bold text-foreground mb-2">Kết quả bài thi</h1>
+              <p className="text-muted-foreground mb-6">{exam.title}</p>
+              
+              <div className="grid grid-cols-3 gap-4 mb-8">
+                <div className="bg-card border border-border rounded-xl p-4">
+                  <div className="text-3xl font-bold text-primary mb-1">{scorePercent}%</div>
+                  <div className="text-sm text-muted-foreground">Điểm số</div>
+                </div>
+                <div className="bg-card border border-border rounded-xl p-4">
+                  <div className="text-3xl font-bold text-green-500 mb-1">{correctCount}</div>
+                  <div className="text-sm text-muted-foreground">Câu đúng</div>
+                </div>
+                <div className="bg-card border border-border rounded-xl p-4">
+                  <div className="text-3xl font-bold text-red-500 mb-1">{questions.length - correctCount}</div>
+                  <div className="text-sm text-muted-foreground">Câu sai</div>
+                </div>
+              </div>
+
+              <div className="flex justify-center gap-4">
+                <Button variant="outline" onClick={() => navigate('/exams')}>
+                  <Home className="w-4 h-4 mr-2" />
+                  Về trang chủ
+                </Button>
+                <Button onClick={() => window.location.reload()}>
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Làm lại
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Review Answers */}
+        <section className="py-8">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl font-bold text-foreground mb-6">Xem lại đáp án</h2>
+            
+            <div className="space-y-6">
+              {questions.map((question, index) => {
+                const userAnswer = answers[question.id];
+                const isCorrect = userAnswer === question.correct_answer;
+                
+                return (
+                  <div key={question.id} className="bg-card border border-border rounded-xl p-6">
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        isCorrect ? 'bg-green-500/20' : 'bg-red-500/20'
+                      }`}>
+                        {isCorrect ? (
+                          <CheckCircle2 className="w-5 h-5 text-green-500" />
+                        ) : (
+                          <XCircle className="w-5 h-5 text-red-500" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-foreground mb-4">
+                          Câu {index + 1}: {question.question_text}
+                        </h3>
+                        
+                        <div className="grid gap-3">
+                          {['A', 'B', 'C', 'D'].map((option) => {
+                            const optionKey = `option_${option.toLowerCase()}` as keyof Question;
+                            const optionText = question[optionKey];
+                            if (!optionText) return null;
+                            
+                            return (
+                              <div
+                                key={option}
+                                className={`p-3 rounded-lg border transition-all ${getOptionClass(question.id, option)}`}
+                              >
+                                <span className="font-medium mr-2">{option}.</span>
+                                {optionText as string}
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {question.explanation && (
+                          <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+                            <p className="text-sm text-muted-foreground">
+                              <strong>Giải thích:</strong> {question.explanation}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <Footer />
+      </div>
+    );
+  }
+
+  // Exam taking screen
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-50 bg-card border-b border-border">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <h1 className="font-semibold text-foreground truncate max-w-[200px] md:max-w-none">
+                {exam.title}
+              </h1>
+              <Badge variant="outline">
+                Câu {currentQuestionIndex + 1}/{questions.length}
+              </Badge>
+            </div>
+
+            <div className="flex items-center gap-4">
+              {/* Timer */}
+              <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
+                timeLeft <= 60 ? 'bg-red-500/20 text-red-500' : 'bg-muted'
+              }`}>
+                <Clock className="w-4 h-4" />
+                <span className="font-mono font-semibold">{formatTime(timeLeft)}</span>
+              </div>
+
+              <Button 
+                onClick={() => setShowSubmitDialog(true)}
+                className="hidden md:flex"
+              >
+                Nộp bài
+              </Button>
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="mt-3">
+            <Progress value={progress} className="h-2" />
+            <p className="text-xs text-muted-foreground mt-1">
+              Đã trả lời {answeredCount}/{questions.length} câu
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 container mx-auto px-4 py-6">
+        <div className="grid lg:grid-cols-4 gap-6">
+          {/* Question Area */}
+          <div className="lg:col-span-3">
+            <div className="bg-card border border-border rounded-xl p-6">
+              <h2 className="text-xl font-semibold text-foreground mb-6">
+                Câu {currentQuestionIndex + 1}: {currentQuestion?.question_text}
+              </h2>
+
+              <div className="space-y-3">
+                {['A', 'B', 'C', 'D'].map((option) => {
+                  if (!currentQuestion) return null;
+                  const optionKey = `option_${option.toLowerCase()}` as keyof Question;
+                  const optionText = currentQuestion[optionKey];
+                  if (!optionText) return null;
+                  
+                  const isSelected = answers[currentQuestion.id] === option;
+                  
+                  return (
+                    <button
+                      key={option}
+                      onClick={() => handleAnswerSelect(currentQuestion.id, option)}
+                      className={`w-full text-left p-4 rounded-xl border transition-all ${
+                        isSelected
+                          ? 'border-primary bg-primary/10 ring-2 ring-primary'
+                          : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                      }`}
+                    >
+                      <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full mr-3 ${
+                        isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                      }`}>
+                        {option}
+                      </span>
+                      {optionText as string}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Navigation */}
+              <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))}
+                  disabled={currentQuestionIndex === 0}
+                >
+                  <ChevronLeft className="w-4 h-4 mr-2" />
+                  Câu trước
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentQuestionIndex((prev) => Math.min(questions.length - 1, prev + 1))}
+                  disabled={currentQuestionIndex === questions.length - 1}
+                >
+                  Câu sau
+                  <ChevronRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Question Navigator */}
+          <div className="lg:col-span-1">
+            <div className="bg-card border border-border rounded-xl p-4 sticky top-32">
+              <div className="flex items-center gap-2 mb-4">
+                <List className="w-4 h-4" />
+                <h3 className="font-semibold text-foreground">Danh sách câu hỏi</h3>
+              </div>
+              
+              <div className="grid grid-cols-5 gap-2">
+                {questions.map((q, index) => {
+                  const isAnswered = !!answers[q.id];
+                  const isCurrent = index === currentQuestionIndex;
+                  
+                  return (
+                    <button
+                      key={q.id}
+                      onClick={() => setCurrentQuestionIndex(index)}
+                      className={`w-full aspect-square rounded-lg text-sm font-medium transition-all ${
+                        isCurrent
+                          ? 'bg-primary text-primary-foreground'
+                          : isAnswered
+                          ? 'bg-green-500/20 text-green-500 border border-green-500/30'
+                          : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                      }`}
+                    >
+                      {index + 1}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <Button 
+                onClick={() => setShowSubmitDialog(true)} 
+                className="w-full mt-4"
+              >
+                Nộp bài ({answeredCount}/{questions.length})
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Submit Button */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-card border-t border-border">
+        <Button onClick={() => setShowSubmitDialog(true)} className="w-full">
+          Nộp bài ({answeredCount}/{questions.length})
+        </Button>
+      </div>
+
+      {/* Submit Confirmation Dialog */}
+      <AlertDialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận nộp bài?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn đã trả lời {answeredCount}/{questions.length} câu hỏi.
+              {answeredCount < questions.length && (
+                <span className="block mt-2 text-yellow-500">
+                  Còn {questions.length - answeredCount} câu chưa trả lời!
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Tiếp tục làm bài</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSubmit}>Nộp bài</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default ExamTaking;
