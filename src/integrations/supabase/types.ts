@@ -14,7 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      courses: {
+        Row: {
+          category: string
+          created_at: string
+          creator_id: string | null
+          creator_name: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_official: boolean | null
+          subcategory: string | null
+          term_count: number | null
+          title: string
+          topic: string | null
+          updated_at: string
+          view_count: number | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          creator_id?: string | null
+          creator_name?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_official?: boolean | null
+          subcategory?: string | null
+          term_count?: number | null
+          title: string
+          topic?: string | null
+          updated_at?: string
+          view_count?: number | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          creator_id?: string | null
+          creator_name?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_official?: boolean | null
+          subcategory?: string | null
+          term_count?: number | null
+          title?: string
+          topic?: string | null
+          updated_at?: string
+          view_count?: number | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
