@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -52,6 +53,7 @@ interface Exam {
 const ExamTaking = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -128,6 +130,7 @@ const ExamTaking = () => {
 
       supabase.from('exam_attempts').insert({
         exam_id: exam.id,
+        user_id: user?.id || null,
         score: Math.round((correctCount / questions.length) * 100),
         total_questions: questions.length,
         correct_answers: correctCount,
@@ -135,7 +138,7 @@ const ExamTaking = () => {
         answers: answers,
       });
     }
-  }, [isSubmitted, timeLeft, exam, questions, answers, startTime]);
+  }, [isSubmitted, timeLeft, exam, questions, answers, startTime, user?.id]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -162,13 +165,14 @@ const ExamTaking = () => {
     // Save attempt to database
     await supabase.from('exam_attempts').insert({
       exam_id: exam.id,
+      user_id: user?.id || null,
       score: Math.round((correctCount / questions.length) * 100),
       total_questions: questions.length,
       correct_answers: correctCount,
       time_spent_seconds: timeSpent,
       answers: answers,
     });
-  }, [questions, exam, answers, startTime]);
+  }, [questions, exam, answers, startTime, user?.id]);
 
   const currentQuestion = questions?.[currentQuestionIndex];
   const answeredCount = Object.keys(answers).length;
