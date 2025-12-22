@@ -110,6 +110,62 @@ export type Database = {
         }
         Relationships: []
       }
+      exams: {
+        Row: {
+          attempt_count: number | null
+          category_id: string | null
+          created_at: string
+          description: string | null
+          difficulty: string | null
+          duration_minutes: number | null
+          id: string
+          is_featured: boolean | null
+          pass_rate: number | null
+          question_count: number | null
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attempt_count?: number | null
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          difficulty?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_featured?: boolean | null
+          pass_rate?: number | null
+          question_count?: number | null
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attempt_count?: number | null
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          difficulty?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_featured?: boolean | null
+          pass_rate?: number | null
+          question_count?: number | null
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exams_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "exam_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
