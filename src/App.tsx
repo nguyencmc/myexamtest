@@ -10,6 +10,7 @@ import Courses from "./pages/Courses";
 import Exams from "./pages/Exams";
 import Flashcards from "./pages/Flashcards";
 import Podcasts from "./pages/Podcasts";
+import PodcastDetail from "./pages/PodcastDetail";
 import ExamCategoryDetail from "./pages/ExamCategoryDetail";
 import ExamDetail from "./pages/ExamDetail";
 import ExamTaking from "./pages/ExamTaking";
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/courses" element={<Courses />} />
             <Route path="/flashcards" element={<Flashcards />} />
             <Route path="/podcasts" element={<Podcasts />} />
+            <Route path="/podcast/:slug" element={<PodcastDetail />} />
             <Route path="/exams" element={<Exams />} />
             <Route path="/exams/:slug" element={<ExamCategoryDetail />} />
             <Route path="/exam/:slug" element={<ExamDetail />} />
