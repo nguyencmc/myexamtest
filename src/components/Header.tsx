@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogOut, User, History, Settings, BookOpen, Trophy } from "lucide-react";
+import { Menu, X, LogOut, User, History, Settings, BookOpen, Trophy, LayoutDashboard, Shield, GraduationCap } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +36,7 @@ interface UserProfile {
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const { isAdmin, isTeacher } = useUserRole();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
 
@@ -128,6 +130,12 @@ export const Header = () => {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard">
+                      <LayoutDashboard className="w-4 h-4 mr-2" />
+                      Dashboard
+                    </Link>
+                  </DropdownMenuItem>
                   {profile?.username && (
                     <DropdownMenuItem asChild>
                       <Link to={`/@${profile.username}`}>
@@ -148,6 +156,27 @@ export const Header = () => {
                       Thiết lập
                     </Link>
                   </DropdownMenuItem>
+                  {(isAdmin || isTeacher) && (
+                    <>
+                      <DropdownMenuSeparator />
+                      {isAdmin && (
+                        <DropdownMenuItem asChild>
+                          <Link to="/admin">
+                            <Shield className="w-4 h-4 mr-2" />
+                            Admin Dashboard
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      {isTeacher && !isAdmin && (
+                        <DropdownMenuItem asChild>
+                          <Link to="/teacher">
+                            <GraduationCap className="w-4 h-4 mr-2" />
+                            Teacher Dashboard
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                    </>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
                     <LogOut className="w-4 h-4 mr-2" />

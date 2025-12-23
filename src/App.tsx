@@ -23,6 +23,17 @@ import Leaderboard from "./pages/Leaderboard";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
+// Admin & Teacher pages
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import TeacherDashboard from "./pages/admin/TeacherDashboard";
+import ExamManagement from "./pages/admin/ExamManagement";
+import ExamEditor from "./pages/admin/ExamEditor";
+import FlashcardManagement from "./pages/admin/FlashcardManagement";
+import FlashcardEditor from "./pages/admin/FlashcardEditor";
+import PodcastManagement from "./pages/admin/PodcastManagement";
+import PodcastEditor from "./pages/admin/PodcastEditor";
+import StudentDashboard from "./pages/StudentDashboard";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -49,7 +60,22 @@ const App = () => (
             <Route path="/history/:attemptId" element={<AttemptDetail />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/dashboard" element={<StudentDashboard />} />
             <Route path="/@:username" element={<UserProfile />} />
+            
+            {/* Admin & Teacher routes */}
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/teacher" element={<TeacherDashboard />} />
+            <Route path="/admin/exams" element={<ExamManagement />} />
+            <Route path="/admin/exams/create" element={<ExamEditor />} />
+            <Route path="/admin/exams/:id" element={<ExamEditor />} />
+            <Route path="/admin/flashcards" element={<FlashcardManagement />} />
+            <Route path="/admin/flashcards/create" element={<FlashcardEditor />} />
+            <Route path="/admin/flashcards/:id" element={<FlashcardEditor />} />
+            <Route path="/admin/podcasts" element={<PodcastManagement />} />
+            <Route path="/admin/podcasts/create" element={<PodcastEditor />} />
+            <Route path="/admin/podcasts/:id" element={<PodcastEditor />} />
+            
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
