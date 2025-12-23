@@ -14,6 +14,104 @@ export type Database = {
   }
   public: {
     Tables: {
+      book_categories: {
+        Row: {
+          book_count: number | null
+          created_at: string
+          description: string | null
+          display_order: number | null
+          icon_url: string | null
+          id: string
+          is_featured: boolean | null
+          name: string
+          slug: string
+        }
+        Insert: {
+          book_count?: number | null
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          icon_url?: string | null
+          id?: string
+          is_featured?: boolean | null
+          name: string
+          slug: string
+        }
+        Update: {
+          book_count?: number | null
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          icon_url?: string | null
+          id?: string
+          is_featured?: boolean | null
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      books: {
+        Row: {
+          author_name: string | null
+          category_id: string | null
+          content: string | null
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          difficulty: string | null
+          id: string
+          is_featured: boolean | null
+          page_count: number | null
+          rating: number | null
+          read_count: number | null
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_name?: string | null
+          category_id?: string | null
+          content?: string | null
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          difficulty?: string | null
+          id?: string
+          is_featured?: boolean | null
+          page_count?: number | null
+          rating?: number | null
+          read_count?: number | null
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_name?: string | null
+          category_id?: string | null
+          content?: string | null
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          difficulty?: string | null
+          id?: string
+          is_featured?: boolean | null
+          page_count?: number | null
+          rating?: number | null
+          read_count?: number | null
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "books_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "book_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courses: {
         Row: {
           category: string

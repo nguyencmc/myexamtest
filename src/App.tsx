@@ -11,6 +11,8 @@ import Exams from "./pages/Exams";
 import Flashcards from "./pages/Flashcards";
 import Podcasts from "./pages/Podcasts";
 import PodcastDetail from "./pages/PodcastDetail";
+import Books from "./pages/Books";
+import BookDetail from "./pages/BookDetail";
 import ExamCategoryDetail from "./pages/ExamCategoryDetail";
 import ExamDetail from "./pages/ExamDetail";
 import ExamTaking from "./pages/ExamTaking";
@@ -35,7 +37,8 @@ const App = () => (
             <Route path="/podcasts" element={<Podcasts />} />
             <Route path="/podcast/:slug" element={<PodcastDetail />} />
             <Route path="/exams" element={<Exams />} />
-            <Route path="/exams/:slug" element={<ExamCategoryDetail />} />
+            <Route path="/books" element={<Books />} />
+            <Route path="/book/:slug" element={<BookDetail />} />
             <Route path="/exam/:slug" element={<ExamDetail />} />
             <Route path="/exam/:slug/take" element={<ExamTaking />} />
             <Route path="/history" element={<ExamHistory />} />
