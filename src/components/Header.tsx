@@ -22,6 +22,7 @@ const navLinks = [
   { name: "Podcasts", href: "/podcasts" },
   { name: "Khóa học", href: "/courses" },
   { name: "Sách", href: "/books" },
+  { name: "Nhóm học tập", href: "/study-groups" },
   { name: "Bảng xếp hạng", href: "/leaderboard" },
 ];
 

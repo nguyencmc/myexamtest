@@ -34,6 +34,8 @@ import PodcastManagement from "./pages/admin/PodcastManagement";
 import PodcastEditor from "./pages/admin/PodcastEditor";
 import StudentDashboard from "./pages/StudentDashboard";
 import Achievements from "./pages/Achievements";
+import StudyGroups from "./pages/StudyGroups";
+import StudyGroupDetail from "./pages/StudyGroupDetail";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +65,8 @@ const App = () => (
             <Route path="/settings" element={<Settings />} />
             <Route path="/dashboard" element={<StudentDashboard />} />
             <Route path="/achievements" element={<Achievements />} />
+            <Route path="/study-groups" element={<StudyGroups />} />
+            <Route path="/study-groups/:groupId" element={<StudyGroupDetail />} />
             <Route path="/@:username" element={<UserProfile />} />
             
             {/* Admin & Teacher routes */}
