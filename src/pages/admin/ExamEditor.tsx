@@ -16,8 +16,10 @@ import {
   Save,
   Trash2,
   GripVertical,
+  Sparkles,
 } from 'lucide-react';
 import { ImportExportQuestions } from '@/components/admin/ImportExportQuestions';
+import { AIQuestionGenerator } from '@/components/ai/AIQuestionGenerator';
 import {
   Select,
   SelectContent,
@@ -398,6 +400,24 @@ const ExamEditor = () => {
 
           {/* Questions */}
           <div className="lg:col-span-2 space-y-6">
+            {/* AI Question Generator */}
+            <AIQuestionGenerator 
+              examId={id}
+              onQuestionsGenerated={(newQuestions) => {
+                const mapped = newQuestions.map((q, i) => ({
+                  question_text: q.question_text,
+                  option_a: q.option_a,
+                  option_b: q.option_b,
+                  option_c: q.option_c,
+                  option_d: q.option_d,
+                  correct_answer: q.correct_answer,
+                  explanation: q.explanation,
+                  question_order: questions.length + i + 1,
+                }));
+                setQuestions([...questions, ...mapped]);
+              }}
+            />
+
             <div className="flex items-center justify-between flex-wrap gap-3">
               <h2 className="text-xl font-semibold">Câu hỏi ({questions.length})</h2>
               <div className="flex items-center gap-2 flex-wrap">
