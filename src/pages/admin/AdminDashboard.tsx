@@ -253,6 +253,12 @@ const AdminDashboard = () => {
             <p className="text-muted-foreground mt-1">Quản lý hệ thống và người dùng</p>
           </div>
           <div className="flex gap-3">
+            <Link to="/admin/categories">
+              <Button variant="outline" className="gap-2">
+                <Layers className="w-4 h-4" />
+                Quản lý danh mục
+              </Button>
+            </Link>
             <Link to="/admin/exams">
               <Button variant="outline" className="gap-2">
                 <FileText className="w-4 h-4" />
