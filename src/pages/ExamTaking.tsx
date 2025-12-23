@@ -39,6 +39,10 @@ interface Question {
   option_b: string;
   option_c: string | null;
   option_d: string | null;
+  option_e: string | null;
+  option_f: string | null;
+  option_g: string | null;
+  option_h: string | null;
   correct_answer: string;
   explanation: string | null;
   question_order: number;
@@ -313,7 +317,7 @@ const ExamTaking = () => {
                         </h3>
                         
                         <div className="grid gap-3">
-                          {['A', 'B', 'C', 'D'].map((option) => {
+                          {['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].map((option) => {
                             const optionKey = `option_${option.toLowerCase()}` as keyof Question;
                             const optionText = question[optionKey];
                             if (!optionText) return null;
@@ -411,7 +415,7 @@ const ExamTaking = () => {
               </h2>
 
               <div className="space-y-3">
-                {['A', 'B', 'C', 'D'].map((option) => {
+                {['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].map((option) => {
                   if (!currentQuestion) return null;
                   const optionKey = `option_${option.toLowerCase()}` as keyof Question;
                   const optionText = currentQuestion[optionKey];

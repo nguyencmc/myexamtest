@@ -34,6 +34,10 @@ interface Question {
   option_b: string;
   option_c: string;
   option_d: string;
+  option_e: string;
+  option_f: string;
+  option_g: string;
+  option_h: string;
   correct_answer: string;
   explanation: string;
   question_order: number;
@@ -88,8 +92,12 @@ export const ImportExportQuestions = ({ questions, onImport }: ImportExportQuest
           option_b: fields[2] || '',
           option_c: fields[3] || '',
           option_d: fields[4] || '',
-          correct_answer: (fields[5] || 'A').toUpperCase(),
-          explanation: fields[6] || '',
+          option_e: fields[5] || '',
+          option_f: fields[6] || '',
+          option_g: fields[7] || '',
+          option_h: fields[8] || '',
+          correct_answer: (fields[9] || fields[5] || 'A').toUpperCase(),
+          explanation: fields[10] || fields[6] || '',
           question_order: result.length + 1,
         });
       }
@@ -107,10 +115,12 @@ export const ImportExportQuestions = ({ questions, onImport }: ImportExportQuest
       const lines = block.trim().split('\n').map(l => l.trim()).filter(l => l);
       if (lines.length < 3) continue;
       
-      const questionMatch = lines[0].match(/^(?:Q\d*[.:]\s*|Câu\s*\d*[.:]\s*)?(.+)/i);
+      // Match: Q1: , Question 1: , Câu 1: , Question: , or just the question text
+      const questionMatch = lines[0].match(/^(?:Q(?:uestion)?\s*\d*[.:]\s*|Câu\s*\d*[.:]\s*)?(.+)/i);
       const question = questionMatch ? questionMatch[1] : lines[0];
       
       let optionA = '', optionB = '', optionC = '', optionD = '';
+      let optionE = '', optionF = '', optionG = '', optionH = '';
       let correctAnswer = 'A';
       let explanation = '';
       
@@ -121,7 +131,8 @@ export const ImportExportQuestions = ({ questions, onImport }: ImportExportQuest
         const isCorrect = /^\*|^\[x\]|✓|✔|\(correct\)|\(đúng\)/i.test(line);
         const cleanLine = line.replace(/^\*|\[x\]|✓|✔|\(correct\)|\(đúng\)/gi, '').trim();
         
-        const optionMatch = cleanLine.match(/^([A-Da-d])[.:)]\s*(.+)/);
+        // Match options A-H
+        const optionMatch = cleanLine.match(/^([A-Ha-h])[.:)]\s*(.+)/);
         
         if (optionMatch) {
           const letter = optionMatch[1].toUpperCase();
@@ -131,12 +142,16 @@ export const ImportExportQuestions = ({ questions, onImport }: ImportExportQuest
           if (letter === 'B') optionB = text;
           if (letter === 'C') optionC = text;
           if (letter === 'D') optionD = text;
+          if (letter === 'E') optionE = text;
+          if (letter === 'F') optionF = text;
+          if (letter === 'G') optionG = text;
+          if (letter === 'H') optionH = text;
           
           if (isCorrect) correctAnswer = letter;
         } else if (/^(Giải thích|Explanation|Answer)[.:]/i.test(cleanLine)) {
           explanation = cleanLine.replace(/^(Giải thích|Explanation|Answer)[.:]\s*/i, '');
-        } else if (/^(Đáp án|Correct)[.:]\s*([A-Da-d])/i.test(cleanLine)) {
-          const match = cleanLine.match(/([A-Da-d])/i);
+        } else if (/^(Đáp án|Correct)[.:]\s*([A-Ha-h])/i.test(cleanLine)) {
+          const match = cleanLine.match(/([A-Ha-h])/i);
           if (match) correctAnswer = match[1].toUpperCase();
         }
       }
@@ -148,6 +163,10 @@ export const ImportExportQuestions = ({ questions, onImport }: ImportExportQuest
           option_b: optionB,
           option_c: optionC,
           option_d: optionD,
+          option_e: optionE,
+          option_f: optionF,
+          option_g: optionG,
+          option_h: optionH,
           correct_answer: correctAnswer,
           explanation,
           question_order: result.length + 1,
@@ -184,6 +203,10 @@ export const ImportExportQuestions = ({ questions, onImport }: ImportExportQuest
           option_b: q.option_b || q.optionB || q.options?.[1] || q.b || '',
           option_c: q.option_c || q.optionC || q.options?.[2] || q.c || '',
           option_d: q.option_d || q.optionD || q.options?.[3] || q.d || '',
+          option_e: q.option_e || q.optionE || q.options?.[4] || q.e || '',
+          option_f: q.option_f || q.optionF || q.options?.[5] || q.f || '',
+          option_g: q.option_g || q.optionG || q.options?.[6] || q.g || '',
+          option_h: q.option_h || q.optionH || q.options?.[7] || q.h || '',
           correct_answer: (q.correct_answer || q.correctAnswer || q.answer || 'A').toUpperCase(),
           explanation: q.explanation || '',
           question_order: index + 1,
@@ -234,6 +257,10 @@ export const ImportExportQuestions = ({ questions, onImport }: ImportExportQuest
           option_b: q.option_b || q.optionB || q.options?.[1] || q.b || '',
           option_c: q.option_c || q.optionC || q.options?.[2] || q.c || '',
           option_d: q.option_d || q.optionD || q.options?.[3] || q.d || '',
+          option_e: q.option_e || q.optionE || q.options?.[4] || q.e || '',
+          option_f: q.option_f || q.optionF || q.options?.[5] || q.f || '',
+          option_g: q.option_g || q.optionG || q.options?.[6] || q.g || '',
+          option_h: q.option_h || q.optionH || q.options?.[7] || q.h || '',
           correct_answer: (q.correct_answer || q.correctAnswer || q.answer || 'A').toUpperCase(),
           explanation: q.explanation || '',
           question_order: questions.length + index + 1,
@@ -275,9 +302,9 @@ export const ImportExportQuestions = ({ questions, onImport }: ImportExportQuest
 
   // Export functions
   const exportToCSV = () => {
-    const header = 'Question,Option A,Option B,Option C,Option D,Correct Answer,Explanation';
+    const header = 'Question,Option A,Option B,Option C,Option D,Option E,Option F,Option G,Option H,Correct Answer,Explanation';
     const rows = questions.map(q => 
-      `"${q.question_text.replace(/"/g, '""')}","${q.option_a.replace(/"/g, '""')}","${q.option_b.replace(/"/g, '""')}","${q.option_c.replace(/"/g, '""')}","${q.option_d.replace(/"/g, '""')}","${q.correct_answer}","${q.explanation.replace(/"/g, '""')}"`
+      `"${q.question_text.replace(/"/g, '""')}","${q.option_a.replace(/"/g, '""')}","${q.option_b.replace(/"/g, '""')}","${q.option_c.replace(/"/g, '""')}","${q.option_d.replace(/"/g, '""')}","${(q.option_e || '').replace(/"/g, '""')}","${(q.option_f || '').replace(/"/g, '""')}","${(q.option_g || '').replace(/"/g, '""')}","${(q.option_h || '').replace(/"/g, '""')}","${q.correct_answer}","${q.explanation.replace(/"/g, '""')}"`
     );
     
     const csv = [header, ...rows].join('\n');
@@ -286,13 +313,17 @@ export const ImportExportQuestions = ({ questions, onImport }: ImportExportQuest
 
   const exportToTXT = () => {
     const content = questions.map((q, index) => {
-      let text = `Câu ${index + 1}: ${q.question_text}\n`;
+      let text = `Question ${index + 1}: ${q.question_text}\n`;
       text += `A. ${q.option_a}\n`;
       text += `B. ${q.option_b}\n`;
       if (q.option_c) text += `C. ${q.option_c}\n`;
       if (q.option_d) text += `D. ${q.option_d}\n`;
-      text += `Đáp án: ${q.correct_answer}\n`;
-      if (q.explanation) text += `Giải thích: ${q.explanation}\n`;
+      if (q.option_e) text += `E. ${q.option_e}\n`;
+      if (q.option_f) text += `F. ${q.option_f}\n`;
+      if (q.option_g) text += `G. ${q.option_g}\n`;
+      if (q.option_h) text += `H. ${q.option_h}\n`;
+      text += `Correct: ${q.correct_answer}\n`;
+      if (q.explanation) text += `Explanation: ${q.explanation}\n`;
       return text;
     }).join('\n');
     
@@ -391,7 +422,7 @@ export const ImportExportQuestions = ({ questions, onImport }: ImportExportQuest
           <DialogHeader>
             <DialogTitle>Nhập câu hỏi thủ công</DialogTitle>
             <DialogDescription>
-              Hỗ trợ các định dạng: JSON, CSV, hoặc TXT. Xem hướng dẫn bên dưới.
+              Hỗ trợ các định dạng: JSON, CSV, hoặc TXT. Hỗ trợ tối đa 8 đáp án (A-H).
             </DialogDescription>
           </DialogHeader>
           
@@ -402,7 +433,7 @@ export const ImportExportQuestions = ({ questions, onImport }: ImportExportQuest
                 id="manual-input"
                 value={manualInput}
                 onChange={(e) => setManualInput(e.target.value)}
-                placeholder={`Ví dụ TXT:\n\nCâu 1: Thủ đô Việt Nam là gì?\nA. Hà Nội\nB. Hồ Chí Minh\nC. Đà Nẵng\nD. Huế\nĐáp án: A\nGiải thích: Hà Nội là thủ đô của Việt Nam\n\nVí dụ CSV:\nThủ đô Việt Nam là gì?,Hà Nội,Hồ Chí Minh,Đà Nẵng,Huế,A,Hà Nội là thủ đô`}
+                placeholder={`Ví dụ TXT:\n\nQuestion 1: Thủ đô Việt Nam là gì?\nA. Hà Nội\nB. Hồ Chí Minh\nC. Đà Nẵng\nD. Huế\nE. Hải Phòng\nF. Cần Thơ\nCorrect: A\nExplanation: Hà Nội là thủ đô của Việt Nam\n\nVí dụ CSV:\nThủ đô Việt Nam là gì?,Hà Nội,Hồ Chí Minh,Đà Nẵng,Huế,,,,,A,Hà Nội là thủ đô`}
                 rows={12}
               />
             </div>
@@ -410,9 +441,10 @@ export const ImportExportQuestions = ({ questions, onImport }: ImportExportQuest
             <div className="bg-muted/50 rounded-lg p-4 text-sm space-y-2">
               <p className="font-medium">Hướng dẫn định dạng:</p>
               <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                <li><strong>TXT:</strong> Mỗi câu hỏi cách nhau bằng dòng trống. Đáp án A, B, C, D trên từng dòng.</li>
-                <li><strong>CSV:</strong> Câu hỏi, Đáp án A, B, C, D, Đáp án đúng, Giải thích (phân cách bởi dấu phẩy)</li>
-                <li><strong>JSON:</strong> Mảng objects với các trường question_text, option_a, option_b, option_c, option_d, correct_answer, explanation</li>
+                <li><strong>TXT:</strong> Mỗi câu hỏi cách nhau bằng dòng trống. Câu hỏi bắt đầu bằng "Question" hoặc "Câu". Đáp án A-H trên từng dòng.</li>
+                <li><strong>CSV:</strong> Câu hỏi, Đáp án A, B, C, D, E, F, G, H, Đáp án đúng, Giải thích (phân cách bởi dấu phẩy)</li>
+                <li><strong>JSON:</strong> Mảng objects với các trường question_text, option_a đến option_h, correct_answer, explanation</li>
+                <li><strong>Đáp án đúng:</strong> Đánh dấu bằng *, [x], hoặc dòng "Correct: A" / "Đáp án: A"</li>
               </ul>
             </div>
             
