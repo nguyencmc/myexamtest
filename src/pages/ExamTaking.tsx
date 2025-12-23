@@ -8,6 +8,7 @@ import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { AIExplanation } from '@/components/exam/AIExplanation';
 import { 
   Clock, 
   ChevronLeft, 
@@ -336,6 +337,11 @@ const ExamTaking = () => {
                             </p>
                           </div>
                         )}
+
+                        <AIExplanation 
+                          question={question} 
+                          userAnswer={userAnswer} 
+                        />
                       </div>
                     </div>
                   </div>
