@@ -292,28 +292,26 @@ const ExamHistory = () => {
                         </div>
 
                         <div className="flex gap-3">
+                          <Button
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/history/${attempt.id}`);
+                            }}
+                          >
+                            <FileText className="w-4 h-4 mr-2" />
+                            Xem chi tiết
+                          </Button>
                           {attempt.exam?.slug && (
-                            <>
-                              <Button
-                                variant="outline"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigate(`/exam/${attempt.exam?.slug}`);
-                                }}
-                              >
-                                <FileText className="w-4 h-4 mr-2" />
-                                Xem đề thi
-                              </Button>
-                              <Button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigate(`/exam/${attempt.exam?.slug}/take`);
-                                }}
-                              >
-                                <Trophy className="w-4 h-4 mr-2" />
-                                Làm lại
-                              </Button>
-                            </>
+                            <Button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/exam/${attempt.exam?.slug}/take`);
+                              }}
+                            >
+                              <Trophy className="w-4 h-4 mr-2" />
+                              Làm lại
+                            </Button>
                           )}
                         </div>
                       </div>
