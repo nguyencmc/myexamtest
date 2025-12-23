@@ -89,8 +89,10 @@ export const SyncedTranscript = ({
   const activeLineRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (transcript && duration > 0) {
-      setLines(parseTranscript(transcript, duration));
+    if (transcript) {
+      // Use duration if available, otherwise use a default based on transcript with timestamps
+      const effectiveDuration = duration > 0 ? duration : 300; // 5 min default
+      setLines(parseTranscript(transcript, effectiveDuration));
     }
   }, [transcript, duration]);
 
