@@ -18,6 +18,8 @@ import ExamDetail from "./pages/ExamDetail";
 import ExamTaking from "./pages/ExamTaking";
 import ExamHistory from "./pages/ExamHistory";
 import AttemptDetail from "./pages/AttemptDetail";
+import UserProfile from "./pages/UserProfile";
+import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +46,8 @@ const App = () => (
             <Route path="/exam/:slug/take" element={<ExamTaking />} />
             <Route path="/history" element={<ExamHistory />} />
             <Route path="/history/:attemptId" element={<AttemptDetail />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/@:username" element={<UserProfile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

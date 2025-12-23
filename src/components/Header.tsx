@@ -17,7 +17,7 @@ const navLinks = [
   { name: "Podcasts", href: "/podcasts" },
   { name: "Khóa học", href: "/courses" },
   { name: "Sách", href: "/books" },
-  { name: "Kỹ năng", href: "/skills", hasDropdown: true },
+  { name: "Bảng xếp hạng", href: "/leaderboard" },
 ];
 
 export const Header = () => {
@@ -56,7 +56,6 @@ export const Header = () => {
                 className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
               >
                 {link.name}
-                {link.hasDropdown && <ChevronDown className="h-4 w-4" />}
               </Link>
             ))}
           </nav>
