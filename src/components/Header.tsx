@@ -251,6 +251,14 @@ export const Header = () => {
                   </div>
                   
                   {/* Profile Links */}
+                  <Link 
+                    to="/dashboard" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-2 px-2 py-2 text-sm text-muted-foreground hover:text-primary"
+                  >
+                    <LayoutDashboard className="w-4 h-4" />
+                    Dashboard
+                  </Link>
                   {profile?.username && (
                     <Link 
                       to={`/@${profile.username}`} 
@@ -277,6 +285,28 @@ export const Header = () => {
                     <Settings className="w-4 h-4" />
                     Thiết lập
                   </Link>
+                  
+                  {/* Admin/Teacher Links */}
+                  {isAdmin && (
+                    <Link 
+                      to="/admin" 
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center gap-2 px-2 py-2 text-sm text-primary font-medium"
+                    >
+                      <Shield className="w-4 h-4" />
+                      Admin Dashboard
+                    </Link>
+                  )}
+                  {isTeacher && !isAdmin && (
+                    <Link 
+                      to="/teacher" 
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center gap-2 px-2 py-2 text-sm text-primary font-medium"
+                    >
+                      <GraduationCap className="w-4 h-4" />
+                      Teacher Dashboard
+                    </Link>
+                  )}
                   
                   <Button 
                     variant="ghost" 
