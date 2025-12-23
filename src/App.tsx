@@ -32,6 +32,7 @@ import FlashcardManagement from "./pages/admin/FlashcardManagement";
 import FlashcardEditor from "./pages/admin/FlashcardEditor";
 import PodcastManagement from "./pages/admin/PodcastManagement";
 import PodcastEditor from "./pages/admin/PodcastEditor";
+import CategoryManagement from "./pages/admin/CategoryManagement";
 import StudentDashboard from "./pages/StudentDashboard";
 import Achievements from "./pages/Achievements";
 import StudyGroups from "./pages/StudyGroups";
@@ -72,6 +73,7 @@ const App = () => (
             {/* Admin & Teacher routes */}
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/teacher" element={<TeacherDashboard />} />
+            <Route path="/admin/categories" element={<CategoryManagement />} />
             <Route path="/admin/exams" element={<ExamManagement />} />
             <Route path="/admin/exams/create" element={<ExamEditor />} />
             <Route path="/admin/exams/:id" element={<ExamEditor />} />
