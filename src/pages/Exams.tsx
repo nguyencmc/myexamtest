@@ -14,7 +14,9 @@ import {
   Layers, 
   Filter, 
   RotateCcw,
-  FileText
+  FileText,
+  ChevronRight,
+  ExternalLink
 } from "lucide-react";
 import {
   Select,
@@ -37,6 +39,16 @@ interface ExamCategory {
   is_featured: boolean | null;
 }
 
+interface Exam {
+  id: string;
+  title: string;
+  slug: string;
+  description: string | null;
+  question_count: number | null;
+  attempt_count: number | null;
+  category_id: string | null;
+}
+
 const categoryIcons: Record<string, string> = {
   aws: "🔶",
   toeic: "🇺🇸",
@@ -52,72 +64,80 @@ const categoryIcons: Record<string, string> = {
   azure: "☁️",
 };
 
-const categoryColors: Record<string, string> = {
-  aws: "from-orange-400 to-orange-600",
-  toeic: "from-blue-400 to-blue-600",
-  ielts: "from-red-400 to-red-600",
-  tester: "from-green-400 to-green-600",
-  hsk: "from-red-500 to-red-700",
-  jlpt: "from-rose-400 to-rose-600",
-  topik: "from-sky-400 to-sky-600",
-  ba: "from-purple-400 to-purple-600",
-  pmp: "from-indigo-400 to-indigo-600",
-  comptia: "from-teal-400 to-teal-600",
-  cisco: "from-cyan-400 to-cyan-600",
-  azure: "from-blue-500 to-blue-700",
-};
-
 const Exams = () => {
   const [categories, setCategories] = useState<ExamCategory[]>([]);
+  const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("attempts");
   const [publisher, setPublisher] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
 
   useEffect(() => {
-    fetchCategories();
+    fetchData();
   }, [sortBy]);
 
-  const fetchCategories = async () => {
+  const fetchData = async () => {
     setLoading(true);
-    let query = supabase.from("exam_categories").select("*");
-
+    
+    // Fetch categories
+    let categoryQuery = supabase.from("exam_categories").select("*");
     if (sortBy === "attempts") {
-      query = query.order("attempt_count", { ascending: false });
+      categoryQuery = categoryQuery.order("attempt_count", { ascending: false });
     } else if (sortBy === "exams") {
-      query = query.order("exam_count", { ascending: false });
+      categoryQuery = categoryQuery.order("exam_count", { ascending: false });
     } else if (sortBy === "rating") {
-      query = query.order("rating", { ascending: false });
+      categoryQuery = categoryQuery.order("rating", { ascending: false });
     } else if (sortBy === "name") {
-      query = query.order("name", { ascending: true });
+      categoryQuery = categoryQuery.order("name", { ascending: true });
     }
 
-    const { data, error } = await query;
+    // Fetch exams for "Explore in Detail" section
+    const [categoryResult, examResult] = await Promise.all([
+      categoryQuery,
+      supabase.from("exams").select("*").order("attempt_count", { ascending: false })
+    ]);
 
-    if (error) {
-      console.error("Error fetching categories:", error);
+    if (categoryResult.error) {
+      console.error("Error fetching categories:", categoryResult.error);
     } else {
-      setCategories(data || []);
+      setCategories(categoryResult.data || []);
     }
+
+    if (examResult.error) {
+      console.error("Error fetching exams:", examResult.error);
+    } else {
+      setExams(examResult.data || []);
+    }
+
     setLoading(false);
   };
 
-  const filteredCategories = categories.filter((cat) =>
-    cat.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCategories = categories.filter((cat) => {
+    const matchesSearch = cat.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = categoryFilter === "all" || 
+      (categoryFilter === "with-sub" && (cat.subcategory_count || 0) > 0) ||
+      (categoryFilter === "without-sub" && (cat.subcategory_count || 0) === 0);
+    return matchesSearch && matchesCategory;
+  });
+
+  const getExamsByCategory = (categoryId: string) => {
+    return exams.filter(exam => exam.category_id === categoryId).slice(0, 6);
+  };
 
   const formatNumber = (num: number | null) => {
     if (!num) return "0";
     if (num >= 1000) {
-      return (num / 1000).toFixed(1) + "k";
+      return num.toLocaleString();
     }
-    return num.toLocaleString();
+    return num.toString();
   };
 
   const handleReset = () => {
     setSearchQuery("");
     setSortBy("attempts");
     setPublisher("all");
+    setCategoryFilter("all");
   };
 
   return (
@@ -130,48 +150,60 @@ const Exams = () => {
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
-              placeholder="Tìm kiếm danh mục..."
+              placeholder="Search categories..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-14 text-lg rounded-2xl border-2 border-border focus:border-primary"
+              className="pl-12 h-14 text-lg rounded-2xl border-2 border-border focus:border-primary bg-card"
             />
           </div>
         </div>
 
         {/* Filter Section */}
-        <div className="bg-card rounded-2xl p-6 mb-8 border border-border/50 shadow-card">
+        <div className="bg-card rounded-2xl p-6 mb-8 border border-border/50 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <Filter className="w-5 h-5 text-primary" />
-            <h3 className="font-semibold text-foreground">Bộ lọc và Sắp xếp</h3>
+            <h3 className="font-semibold text-foreground">Filter and Sort</h3>
           </div>
 
           <div className="flex flex-wrap gap-4 items-center">
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Sắp xếp theo" />
+              <SelectTrigger className="w-44 bg-muted/50">
+                <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="attempts">Nhiều lượt thi nhất</SelectItem>
-                <SelectItem value="exams">Nhiều đề thi nhất</SelectItem>
-                <SelectItem value="rating">Đánh giá cao nhất</SelectItem>
-                <SelectItem value="name">Tên (A-Z)</SelectItem>
+                <SelectItem value="attempts">Most Attempts</SelectItem>
+                <SelectItem value="attempts-asc">Least Attempts</SelectItem>
+                <SelectItem value="exams">Most Exams</SelectItem>
+                <SelectItem value="rating">Highest Rating</SelectItem>
+                <SelectItem value="name">Name (A-Z)</SelectItem>
               </SelectContent>
             </Select>
 
             <Select value={publisher} onValueChange={setPublisher}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Nhà xuất bản" />
+              <SelectTrigger className="w-44 bg-muted/50">
+                <SelectValue placeholder="Publisher" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tất cả</SelectItem>
+                <SelectItem value="all">All Publishers</SelectItem>
                 <SelectItem value="official">The Best Study</SelectItem>
-                <SelectItem value="community">Cộng đồng</SelectItem>
+                <SelectItem value="community">End Users</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-48 bg-muted/50">
+                <SelectValue placeholder="Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="with-sub">With Subcategories</SelectItem>
+                <SelectItem value="without-sub">Without Subcategories</SelectItem>
               </SelectContent>
             </Select>
 
             <Button variant="outline" onClick={handleReset} className="gap-2">
               <RotateCcw className="w-4 h-4" />
-              Đặt lại
+              Reset
             </Button>
           </div>
         </div>
@@ -197,7 +229,7 @@ const Exams = () => {
           <div className="text-center py-16">
             <FileText className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
             <p className="text-muted-foreground text-lg">
-              Không tìm thấy danh mục nào
+              No categories found
             </p>
           </div>
         ) : (
@@ -206,30 +238,26 @@ const Exams = () => {
               <Link
                 key={category.id}
                 to={`/exams/${category.slug}`}
-                className="bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-hover transition-all duration-300 cursor-pointer group border border-border/50 block"
+                className="bg-gradient-to-br from-violet-500 via-purple-500 to-violet-600 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group block"
               >
-                {/* Category Header with Gradient */}
-                <div
-                  className={`h-40 bg-gradient-to-br ${
-                    categoryColors[category.slug] || "from-primary to-accent"
-                  } relative flex items-center justify-center`}
-                >
+                {/* Category Header */}
+                <div className="h-36 relative flex items-center justify-center">
                   {/* Exam Count Badge */}
                   <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1.5 flex items-center gap-1.5">
                     <FileText className="w-4 h-4 text-white" />
-                    <span className="text-white font-semibold">
+                    <span className="text-white font-semibold text-sm">
                       {category.exam_count || 0}
                     </span>
                   </div>
 
                   {/* Category Icon */}
-                  <div className="text-6xl">
+                  <div className="text-6xl drop-shadow-lg">
                     {categoryIcons[category.slug] || "📚"}
                   </div>
                 </div>
 
                 {/* Category Info */}
-                <div className="p-5">
+                <div className="bg-card p-5 rounded-t-3xl -mt-4 relative">
                   <h3 className="font-bold text-lg text-foreground mb-2 group-hover:text-primary transition-colors">
                     {category.name}
                   </h3>
@@ -259,7 +287,7 @@ const Exams = () => {
                         <strong className="text-foreground">
                           {formatNumber(category.attempt_count)}
                         </strong>{" "}
-                        lượt thi
+                        attempts
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -268,19 +296,19 @@ const Exams = () => {
                         <strong className="text-foreground">
                           {formatNumber(category.question_count)}
                         </strong>{" "}
-                        câu hỏi
+                        questions
                       </span>
                     </div>
                   </div>
 
                   {/* Subcategories */}
-                  {category.subcategory_count && category.subcategory_count > 0 && (
+                  {category.subcategory_count !== null && category.subcategory_count >= 0 && (
                     <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground uppercase tracking-wide">
                         <Layers className="w-4 h-4" />
-                        <span>Danh mục con</span>
+                        <span>Subcategories</span>
                       </div>
-                      <span className="bg-primary/10 text-primary px-2 py-1 rounded-full text-sm font-medium">
+                      <span className="bg-primary/10 text-primary px-2.5 py-1 rounded-full text-sm font-semibold">
                         {category.subcategory_count}
                       </span>
                     </div>
@@ -289,6 +317,137 @@ const Exams = () => {
               </Link>
             ))}
           </div>
+        )}
+
+        {/* Explore in Detail Section */}
+        {!loading && filteredCategories.length > 0 && (
+          <section className="mt-16">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-bold text-foreground mb-2">Explore in Detail</h2>
+              <p className="text-muted-foreground">View all subcategories and topics</p>
+            </div>
+
+            <div className="space-y-8">
+              {filteredCategories.map((category) => {
+                const categoryExams = getExamsByCategory(category.id);
+                
+                return (
+                  <div 
+                    key={category.id} 
+                    id={`category-${category.slug}`}
+                    className="bg-card rounded-2xl border border-border/50 overflow-hidden shadow-sm"
+                  >
+                    {/* Category Header */}
+                    <div className="bg-gradient-to-r from-violet-500/10 via-purple-500/5 to-transparent p-6 border-b border-border/50">
+                      <div className="flex items-start gap-4">
+                        <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-3xl shadow-lg">
+                          {categoryIcons[category.slug] || "📚"}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between flex-wrap gap-4">
+                            <div>
+                              <h3 className="text-2xl font-bold text-foreground mb-2">
+                                {category.name}
+                              </h3>
+                              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                                <div className="flex items-center gap-1.5 bg-primary/10 px-3 py-1 rounded-full">
+                                  <FileText className="w-4 h-4 text-primary" />
+                                  <span className="font-semibold text-primary">{category.exam_count || 0}</span>
+                                  <span>Exams</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 bg-accent/10 px-3 py-1 rounded-full">
+                                  <HelpCircle className="w-4 h-4 text-accent" />
+                                  <span className="font-semibold text-accent">{formatNumber(category.question_count)}</span>
+                                  <span>questions</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 bg-orange-500/10 px-3 py-1 rounded-full">
+                                  <Users className="w-4 h-4 text-orange-500" />
+                                  <span className="font-semibold text-orange-500">{formatNumber(category.attempt_count)}</span>
+                                  <span>attempts</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 bg-blue-500/10 px-3 py-1 rounded-full">
+                                  <Layers className="w-4 h-4 text-blue-500" />
+                                  <span className="font-semibold text-blue-500">{category.subcategory_count || 0}</span>
+                                  <span>Subcategories</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-1">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`w-4 h-4 ${
+                                      i < Math.floor(category.rating || 5)
+                                        ? "text-yellow-400 fill-yellow-400"
+                                        : "text-gray-300"
+                                    }`}
+                                  />
+                                ))}
+                                <span className="text-sm font-medium ml-1">{category.rating || 5}/5</span>
+                              </div>
+                              <Link to={`/exams/${category.slug}`}>
+                                <Button variant="outline" size="sm" className="gap-2">
+                                  View all
+                                  <ExternalLink className="w-4 h-4" />
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Exams Grid */}
+                    {categoryExams.length > 0 ? (
+                      <div className="p-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {categoryExams.map((exam) => (
+                            <Link
+                              key={exam.id}
+                              to={`/exam/${exam.slug}`}
+                              className="group flex items-center justify-between p-4 bg-muted/50 hover:bg-primary/5 rounded-xl border border-transparent hover:border-primary/20 transition-all"
+                            >
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                                  {exam.title}
+                                </h4>
+                                <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+                                  <span className="flex items-center gap-1">
+                                    <HelpCircle className="w-3.5 h-3.5" />
+                                    {exam.question_count || 0} questions
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <Users className="w-3.5 h-3.5" />
+                                    {exam.attempt_count || 0}
+                                  </span>
+                                </div>
+                              </div>
+                              <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                            </Link>
+                          ))}
+                        </div>
+                        {categoryExams.length < (category.exam_count || 0) && (
+                          <div className="mt-4 text-center">
+                            <Link to={`/exams/${category.slug}`}>
+                              <Button variant="ghost" className="text-primary hover:text-primary/80">
+                                View all {category.exam_count} exams
+                                <ChevronRight className="w-4 h-4 ml-1" />
+                              </Button>
+                            </Link>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="p-6 text-center text-muted-foreground">
+                        <p>No exams available in this category yet</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
         )}
       </main>
 
