@@ -317,23 +317,34 @@ const BookDetail = () => {
               )}
 
               {/* Read Button */}
-              <Button
-                size="lg"
-                className="w-full sm:w-auto"
-                onClick={() => setShowContent(!showContent)}
-              >
-                <BookOpen className="mr-2 h-5 w-5" />
-                {showContent ? "Hide Content" : "Read Book"}
-              </Button>
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  size="lg"
+                  className="w-full sm:w-auto"
+                  onClick={() => navigate(`/book/${slug}/read`)}
+                >
+                  <BookOpen className="mr-2 h-5 w-5" />
+                  Read Book
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  onClick={() => setShowContent(!showContent)}
+                >
+                  {showContent ? "Hide Preview" : "Preview Content"}
+                </Button>
+              </div>
 
-              {/* Book Content */}
+              {/* Book Content Preview */}
               {showContent && book.content && (
                 <div className="mt-6">
-                  <h2 className="text-xl font-semibold text-foreground mb-4">Content</h2>
-                  <ScrollArea className="h-[500px] rounded-lg border border-border p-6 bg-muted/30">
+                  <h2 className="text-xl font-semibold text-foreground mb-4">Content Preview</h2>
+                  <ScrollArea className="h-[300px] rounded-lg border border-border p-6 bg-muted/30">
                     <div className="prose prose-sm dark:prose-invert max-w-none">
                       <p className="whitespace-pre-wrap text-foreground leading-relaxed">
-                        {book.content}
+                        {book.content.slice(0, 2000)}
+                        {book.content.length > 2000 && "..."}
                       </p>
                     </div>
                   </ScrollArea>
