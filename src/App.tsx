@@ -20,6 +20,7 @@ import ExamHistory from "./pages/ExamHistory";
 import AttemptDetail from "./pages/AttemptDetail";
 import UserProfile from "./pages/UserProfile";
 import Leaderboard from "./pages/Leaderboard";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/history" element={<ExamHistory />} />
             <Route path="/history/:attemptId" element={<AttemptDetail />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="/@:username" element={<UserProfile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
