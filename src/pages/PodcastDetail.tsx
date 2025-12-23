@@ -7,7 +7,7 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { SyncedTranscript } from "@/components/podcast/SyncedTranscript";
 import {
   Play,
   Pause,
@@ -24,7 +24,9 @@ import {
   Download,
   Share2,
   Heart,
-  ListMusic
+  FileText,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 
 interface Podcast {
@@ -75,7 +77,7 @@ const PodcastDetail = () => {
   const [volume, setVolume] = useState(0.7);
   const [isMuted, setIsMuted] = useState(false);
   const [isRepeat, setIsRepeat] = useState(false);
-  const [showTranscript, setShowTranscript] = useState(false);
+  const [showTranscript, setShowTranscript] = useState(true);
 
   // Fetch podcast
   const { data: podcast, isLoading } = useQuery({
@@ -415,29 +417,53 @@ const PodcastDetail = () => {
                   </div>
                 </div>
 
-                {/* Transcript Toggle */}
-                {podcast.transcript && (
-                  <div className="mt-6">
+                {/* Synced Transcript Section */}
+                <div className="mt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <FileText className="w-5 h-5" />
+                      Transcript
+                    </h3>
                     <Button
-                      variant="outline"
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setShowTranscript(!showTranscript)}
-                      className="border-white/30 text-white hover:bg-white/10"
+                      className="text-white/70 hover:text-white hover:bg-white/10"
                     >
-                      <ListMusic className="w-4 h-4 mr-2" />
-                      {showTranscript ? "Ẩn transcript" : "Xem transcript"}
+                      {showTranscript ? (
+                        <>
+                          <ChevronUp className="w-4 h-4 mr-1" />
+                          Thu gọn
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="w-4 h-4 mr-1" />
+                          Mở rộng
+                        </>
+                      )}
                     </Button>
-
-                    {showTranscript && (
-                      <Card className="mt-4 bg-white/5 border-white/10">
-                        <CardContent className="p-6">
-                          <p className="text-white/80 whitespace-pre-wrap">
-                            {podcast.transcript}
-                          </p>
-                        </CardContent>
-                      </Card>
-                    )}
                   </div>
-                )}
+
+                  {showTranscript && (
+                    <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4">
+                      <SyncedTranscript
+                        transcript={podcast.transcript}
+                        currentTime={currentTime}
+                        onSeek={(time) => {
+                          if (audioRef.current) {
+                            audioRef.current.currentTime = time;
+                            setCurrentTime(time);
+                            if (!isPlaying) {
+                              audioRef.current.play();
+                              setIsPlaying(true);
+                            }
+                          }
+                        }}
+                        duration={duration}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Related Podcasts - Right */}
