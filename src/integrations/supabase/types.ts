@@ -531,6 +531,7 @@ export type Database = {
           bio: string | null
           created_at: string
           email: string | null
+          expires_at: string | null
           full_name: string | null
           id: string
           level: number | null
@@ -547,6 +548,7 @@ export type Database = {
           bio?: string | null
           created_at?: string
           email?: string | null
+          expires_at?: string | null
           full_name?: string | null
           id?: string
           level?: number | null
@@ -563,6 +565,7 @@ export type Database = {
           bio?: string | null
           created_at?: string
           email?: string | null
+          expires_at?: string | null
           full_name?: string | null
           id?: string
           level?: number | null
@@ -890,6 +893,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_user_expired: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user" | "teacher"
