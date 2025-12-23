@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { SmartRecommendations } from '@/components/ai/SmartRecommendations';
+import { AITutorButton } from '@/components/ai/AITutorButton';
 import { 
   BookOpen, 
   FileText, 
@@ -312,6 +314,11 @@ const StudentDashboard = () => {
           </Card>
         </div>
 
+        {/* Smart Recommendations */}
+        <div className="mb-8">
+          <SmartRecommendations />
+        </div>
+
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Left Column - Progress & Weekly Chart */}
           <div className="lg:col-span-2 space-y-6">
@@ -529,6 +536,7 @@ const StudentDashboard = () => {
         </div>
       </main>
       
+      <AITutorButton />
       <Footer />
     </div>
   );

@@ -1,1 +1,10 @@
 project_id = "xhmsgvlnrhpscehzpqad"
+
+[functions.ai-tutor]
+verify_jwt = false
+
+[functions.generate-questions]
+verify_jwt = false
+
+[functions.smart-recommendations]
+verify_jwt = false
