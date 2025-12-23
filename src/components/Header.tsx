@@ -201,10 +201,63 @@ export const Header = () => {
             ))}
             <div className="flex flex-col gap-2 pt-4 border-t border-border">
               {user ? (
-                <Button variant="ghost" onClick={handleSignOut} className="w-full justify-center text-destructive">
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Đăng xuất
-                </Button>
+                <>
+                  {/* User Info */}
+                  <div className="flex items-center gap-3 px-2 py-2">
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src={profile?.avatar_url || undefined} />
+                      <AvatarFallback className="bg-primary text-primary-foreground">
+                        {displayName.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">{displayName}</span>
+                      {profile?.level && (
+                        <Badge variant="secondary" className="w-fit text-xs">
+                          <Trophy className="w-3 h-3 mr-1" />
+                          Level {profile.level} • {profile.points?.toLocaleString() || 0} điểm
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Profile Links */}
+                  {profile?.username && (
+                    <Link 
+                      to={`/@${profile.username}`} 
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center gap-2 px-2 py-2 text-sm text-muted-foreground hover:text-primary"
+                    >
+                      <User className="w-4 h-4" />
+                      Xem hồ sơ
+                    </Link>
+                  )}
+                  <Link 
+                    to="/history" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-2 px-2 py-2 text-sm text-muted-foreground hover:text-primary"
+                  >
+                    <History className="w-4 h-4" />
+                    Lịch sử làm bài
+                  </Link>
+                  <Link 
+                    to="/settings" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-2 px-2 py-2 text-sm text-muted-foreground hover:text-primary"
+                  >
+                    <Settings className="w-4 h-4" />
+                    Thiết lập
+                  </Link>
+                  
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => { handleSignOut(); setIsMenuOpen(false); }} 
+                    className="w-full justify-start text-destructive mt-2"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Đăng xuất
+                  </Button>
+                </>
               ) : (
                 <>
                   <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
