@@ -252,7 +252,13 @@ const AdminDashboard = () => {
             </h1>
             <p className="text-muted-foreground mt-1">Quản lý hệ thống và người dùng</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
+            <Link to="/admin/users">
+              <Button variant="outline" className="gap-2">
+                <Users className="w-4 h-4" />
+                Quản lý người dùng
+              </Button>
+            </Link>
             <Link to="/admin/categories">
               <Button variant="outline" className="gap-2">
                 <Layers className="w-4 h-4" />
