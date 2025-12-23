@@ -8,14 +8,14 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Search, 
-  Star, 
   Headphones, 
-  Clock, 
-  Filter, 
-  RotateCcw,
-  Mic,
-  Play,
-  TrendingUp
+  Clock,
+  List,
+  Music,
+  Briefcase,
+  Globe,
+  BookOpen,
+  Flame
 } from "lucide-react";
 import {
   Select,
@@ -24,7 +24,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 
 interface PodcastCategory {
   id: string;
@@ -51,24 +50,18 @@ interface Podcast {
   difficulty: string | null;
 }
 
-const categoryIcons: Record<string, string> = {
-  "toeic-listening": "🎧",
-  "ielts-listening": "🎯",
-  "english-conversations": "💬",
-  "business-english": "💼",
+const categoryIcons: Record<string, React.ReactNode> = {
+  "toeic-listening": <Headphones className="w-4 h-4" />,
+  "ielts-listening": <BookOpen className="w-4 h-4" />,
+  "english-conversations": <Globe className="w-4 h-4" />,
+  "business-english": <Briefcase className="w-4 h-4" />,
+  "music": <Music className="w-4 h-4" />,
 };
 
-const categoryColors: Record<string, string> = {
-  "toeic-listening": "from-blue-400 to-blue-600",
-  "ielts-listening": "from-red-400 to-red-600",
-  "english-conversations": "from-green-400 to-green-600",
-  "business-english": "from-purple-400 to-purple-600",
-};
-
-const difficultyLabels: Record<string, { label: string; color: string }> = {
-  beginner: { label: "Cơ bản", color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
-  intermediate: { label: "Trung bình", color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" },
-  advanced: { label: "Nâng cao", color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
+const podcastThumbnails: Record<string, string> = {
+  "toeic": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=200&h=200&fit=crop",
+  "ielts": "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=200&h=200&fit=crop",
+  "default": "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop",
 };
 
 const Podcasts = () => {
@@ -76,13 +69,12 @@ const Podcasts = () => {
   const [podcasts, setPodcasts] = useState<Podcast[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState("listens");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [viewMode, setViewMode] = useState<"categories" | "podcasts">("categories");
+  const [language, setLanguage] = useState("all");
 
   useEffect(() => {
     fetchData();
-  }, [sortBy, selectedCategory]);
+  }, [selectedCategory]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -105,15 +97,7 @@ const Podcasts = () => {
       }
     }
 
-    if (sortBy === "listens") {
-      podcastQuery = podcastQuery.order("listen_count", { ascending: false });
-    } else if (sortBy === "newest") {
-      podcastQuery = podcastQuery.order("created_at", { ascending: false });
-    } else if (sortBy === "duration") {
-      podcastQuery = podcastQuery.order("duration_seconds", { ascending: false });
-    } else if (sortBy === "episode") {
-      podcastQuery = podcastQuery.order("episode_number", { ascending: true });
-    }
+    podcastQuery = podcastQuery.order("listen_count", { ascending: false });
 
     const { data: podcastsData } = await podcastQuery;
     setPodcasts(podcastsData || []);
@@ -121,19 +105,13 @@ const Podcasts = () => {
     setLoading(false);
   };
 
-  const filteredCategories = categories.filter((cat) =>
-    cat.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const filteredPodcasts = podcasts.filter((pod) =>
-    pod.title.toLowerCase().includes(searchQuery.toLowerCase())
+    pod.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    pod.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const formatNumber = (num: number | null) => {
     if (!num) return "0";
-    if (num >= 1000) {
-      return (num / 1000).toFixed(1) + "k";
-    }
     return num.toLocaleString();
   };
 
@@ -144,283 +122,196 @@ const Podcasts = () => {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const handleReset = () => {
-    setSearchQuery("");
-    setSortBy("listens");
-    setSelectedCategory("all");
+  const getThumbnail = (podcast: Podcast) => {
+    if (podcast.thumbnail_url) return podcast.thumbnail_url;
+    if (podcast.title.toLowerCase().includes("toeic")) return podcastThumbnails.toeic;
+    if (podcast.title.toLowerCase().includes("ielts")) return podcastThumbnails.ielts;
+    return podcastThumbnails.default;
   };
 
-  const getCategoryName = (categoryId: string | null) => {
-    if (!categoryId) return "";
-    const category = categories.find(c => c.id === categoryId);
-    return category?.name || "";
-  };
+  const featuredPodcast = filteredPodcasts.find(p => p.is_featured) || filteredPodcasts[0];
+  const otherPodcasts = filteredPodcasts.filter(p => p.id !== featuredPodcast?.id);
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
 
       <main className="container mx-auto px-4 py-8">
-        {/* Page Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-            Podcasts
-          </h1>
-          <p className="text-muted-foreground">
-            Luyện nghe tiếng Anh mọi lúc mọi nơi với các bài podcast chất lượng
-          </p>
-        </div>
-
-        {/* Search Bar */}
-        <div className="max-w-2xl mx-auto mb-8">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
-              placeholder="Tìm kiếm podcast..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-14 text-lg rounded-2xl border-2 border-border focus:border-primary"
-            />
-          </div>
-        </div>
-
-        {/* View Mode Toggle */}
-        <div className="flex justify-center gap-2 mb-6">
-          <Button
-            variant={viewMode === "categories" ? "default" : "outline"}
-            onClick={() => setViewMode("categories")}
-            className="gap-2"
-          >
-            <Mic className="w-4 h-4" />
-            Danh mục
-          </Button>
-          <Button
-            variant={viewMode === "podcasts" ? "default" : "outline"}
-            onClick={() => setViewMode("podcasts")}
-            className="gap-2"
-          >
-            <Headphones className="w-4 h-4" />
-            Tất cả Podcasts
-          </Button>
-        </div>
-
-        {/* Filter Section */}
-        <div className="bg-card rounded-2xl p-6 mb-8 border border-border/50 shadow-card">
-          <div className="flex items-center gap-2 mb-4">
-            <Filter className="w-5 h-5 text-primary" />
-            <h3 className="font-semibold text-foreground">Bộ lọc và Sắp xếp</h3>
-          </div>
-
-          <div className="flex flex-wrap gap-4 items-center">
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Sắp xếp theo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="listens">Nhiều lượt nghe nhất</SelectItem>
-                <SelectItem value="newest">Mới nhất</SelectItem>
-                <SelectItem value="duration">Dài nhất</SelectItem>
-                <SelectItem value="episode">Theo tập</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {viewMode === "podcasts" && (
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Danh mục" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả</SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.slug}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-
-            <Button variant="outline" onClick={handleReset} className="gap-2">
-              <RotateCcw className="w-4 h-4" />
-              Đặt lại
+        {/* Filter by Category */}
+        <div className="mb-6">
+          <h2 className="text-sm font-semibold text-muted-foreground mb-3">Filter by Category</h2>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={selectedCategory === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedCategory("all")}
+              className="gap-2 rounded-full"
+            >
+              <List className="w-4 h-4" />
+              All
             </Button>
-          </div>
-        </div>
-
-        {/* Content */}
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {[...Array(8)].map((_, i) => (
-              <div
-                key={i}
-                className="bg-card rounded-2xl overflow-hidden animate-pulse"
+            {categories.map((cat) => (
+              <Button
+                key={cat.id}
+                variant={selectedCategory === cat.slug ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedCategory(cat.slug)}
+                className="gap-2 rounded-full"
               >
-                <div className="h-40 bg-muted"></div>
-                <div className="p-5 space-y-3">
-                  <div className="h-6 bg-muted rounded w-3/4"></div>
-                  <div className="h-4 bg-muted rounded w-1/2"></div>
-                  <div className="h-4 bg-muted rounded w-2/3"></div>
-                </div>
-              </div>
+                {categoryIcons[cat.slug] || <Headphones className="w-4 h-4" />}
+                {cat.name}
+              </Button>
             ))}
           </div>
-        ) : viewMode === "categories" ? (
-          // Categories View
-          filteredCategories.length === 0 ? (
-            <div className="text-center py-16">
-              <Mic className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground text-lg">
-                Không tìm thấy danh mục nào
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredCategories.map((category) => (
-                <div
-                  key={category.id}
-                  onClick={() => {
-                    setSelectedCategory(category.slug);
-                    setViewMode("podcasts");
-                  }}
-                  className="bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-hover transition-all duration-300 cursor-pointer group border border-border/50"
-                >
-                  {/* Category Header with Gradient */}
-                  <div
-                    className={`h-40 bg-gradient-to-br ${
-                      categoryColors[category.slug] || "from-primary to-accent"
-                    } relative flex items-center justify-center`}
-                  >
-                    {/* Podcast Count Badge */}
-                    <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1.5 flex items-center gap-1.5">
-                      <Headphones className="w-4 h-4 text-white" />
-                      <span className="text-white font-semibold">
-                        {category.podcast_count || 0}
-                      </span>
-                    </div>
+        </div>
 
-                    {category.is_featured && (
-                      <div className="absolute top-4 left-4">
-                        <Badge className="bg-yellow-500 text-yellow-900">
-                          <Star className="w-3 h-3 mr-1 fill-current" />
-                          Nổi bật
-                        </Badge>
-                      </div>
-                    )}
+        {/* Search and Language Filter */}
+        <div className="flex flex-col md:flex-row gap-4 mb-8">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              placeholder="Search dictation by name, keywords..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-12 h-12 rounded-xl border-border"
+            />
+          </div>
+          <Select value={language} onValueChange={setLanguage}>
+            <SelectTrigger className="w-full md:w-48 h-12 rounded-xl">
+              <SelectValue placeholder="Language" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">English</SelectItem>
+              <SelectItem value="vietnamese">Tiếng Việt</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-                    {/* Category Icon */}
-                    <div className="text-6xl">
-                      {categoryIcons[category.slug] || "🎧"}
+        {/* Most Popular Listenings */}
+        <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-6 md:p-8">
+          <div className="flex items-center gap-2 mb-6">
+            <Flame className="w-6 h-6 text-orange-500" />
+            <h2 className="text-xl md:text-2xl font-bold text-white">Most Popular Listenings</h2>
+          </div>
+
+          {loading ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="aspect-square bg-slate-700 rounded-2xl animate-pulse"></div>
+              <div className="space-y-4">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="flex gap-4 animate-pulse">
+                    <div className="w-16 h-16 bg-slate-700 rounded-xl"></div>
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-slate-700 rounded w-3/4"></div>
+                      <div className="h-3 bg-slate-700 rounded w-1/2"></div>
                     </div>
                   </div>
-
-                  {/* Category Info */}
-                  <div className="p-5">
-                    <h3 className="font-bold text-lg text-foreground mb-2 group-hover:text-primary transition-colors">
-                      {category.name}
-                    </h3>
-
-                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                      {category.description}
-                    </p>
-
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Play className="w-4 h-4 text-primary" />
-                      <span>
-                        <strong className="text-foreground">
-                          {category.podcast_count || 0}
-                        </strong>{" "}
-                        podcasts
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          )
-        ) : (
-          // Podcasts View
-          filteredPodcasts.length === 0 ? (
+          ) : filteredPodcasts.length === 0 ? (
             <div className="text-center py-16">
-              <Headphones className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground text-lg">
+              <Headphones className="w-16 h-16 mx-auto text-slate-600 mb-4" />
+              <p className="text-slate-400 text-lg">
                 Không tìm thấy podcast nào
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredPodcasts.map((podcast) => (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Featured Podcast - Left Side */}
+              {featuredPodcast && (
                 <Link
-                  key={podcast.id}
-                  to={`/podcast/${podcast.slug}`}
-                  className="bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-hover transition-all duration-300 cursor-pointer group border border-border/50 block"
+                  to={`/podcast/${featuredPodcast.slug}`}
+                  className="block group"
                 >
-                  {/* Podcast Header */}
-                  <div className="h-32 bg-gradient-to-br from-primary/80 to-accent/80 relative flex items-center justify-center">
-                    {podcast.is_featured && (
-                      <div className="absolute top-3 left-3">
-                        <Badge className="bg-yellow-500 text-yellow-900">
-                          <TrendingUp className="w-3 h-3 mr-1" />
-                          Hot
-                        </Badge>
-                      </div>
-                    )}
-
-                    <div className="absolute top-3 right-3">
-                      <Badge className={difficultyLabels[podcast.difficulty || "intermediate"].color}>
-                        {difficultyLabels[podcast.difficulty || "intermediate"].label}
-                      </Badge>
-                    </div>
-
-                    <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Play className="w-8 h-8 text-white ml-1" />
-                    </div>
-                  </div>
-
-                  {/* Podcast Info */}
-                  <div className="p-5">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="outline" className="text-xs">
-                        Tập {podcast.episode_number}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {getCategoryName(podcast.category_id)}
-                      </span>
-                    </div>
-
-                    <h3 className="font-bold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2">
-                      {podcast.title}
-                    </h3>
-
-                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                      {podcast.description}
-                    </p>
-
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <div className="flex items-center gap-4">
+                  <div className="relative aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-purple-600 to-indigo-800">
+                    <img
+                      src={getThumbnail(featuredPodcast)}
+                      alt={featuredPodcast.title}
+                      className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                    <div className="absolute bottom-0 left-0 right-0 p-6">
+                      <h3 className="text-xl md:text-2xl font-bold text-white mb-2 line-clamp-2">
+                        {featuredPodcast.title}
+                      </h3>
+                      <p className="text-white/70 text-sm line-clamp-2 mb-3">
+                        {featuredPodcast.description}
+                      </p>
+                      <div className="flex items-center gap-4 text-white/60 text-sm">
                         <div className="flex items-center gap-1">
                           <Clock className="w-4 h-4" />
-                          <span>{formatDuration(podcast.duration_seconds)}</span>
+                          <span>{formatDuration(featuredPodcast.duration_seconds)}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Headphones className="w-4 h-4" />
-                          <span>{formatNumber(podcast.listen_count)}</span>
+                          <span>{formatNumber(featuredPodcast.listen_count)}</span>
                         </div>
                       </div>
                     </div>
-
-                    <div className="mt-3 pt-3 border-t border-border text-xs text-muted-foreground">
-                      Host: {podcast.host_name}
-                    </div>
                   </div>
                 </Link>
-              ))}
+              )}
+
+              {/* Podcast List - Right Side */}
+              <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                {otherPodcasts.map((podcast) => (
+                  <Link
+                    key={podcast.id}
+                    to={`/podcast/${podcast.slug}`}
+                    className="flex items-center gap-4 p-3 rounded-xl bg-slate-800/50 hover:bg-slate-700/50 transition-colors group"
+                  >
+                    {/* Thumbnail */}
+                    <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-slate-700">
+                      <img
+                        src={getThumbnail(podcast)}
+                        alt={podcast.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-white text-sm md:text-base line-clamp-1 group-hover:text-primary transition-colors">
+                        {podcast.title}
+                      </h3>
+                      <p className="text-slate-400 text-xs md:text-sm line-clamp-1 mt-1">
+                        {podcast.description}
+                      </p>
+                    </div>
+
+                    {/* Listen Count */}
+                    <div className="flex items-center gap-1 text-slate-400 text-sm flex-shrink-0">
+                      <Headphones className="w-4 h-4" />
+                      <span>{formatNumber(podcast.listen_count)}</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
-          )
-        )}
+          )}
+        </div>
       </main>
 
       <FloatingActions />
       <Footer />
+
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.2);
+          border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.3);
+        }
+      `}</style>
     </div>
   );
 };
