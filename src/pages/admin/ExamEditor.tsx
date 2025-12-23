@@ -15,8 +15,9 @@ import {
   ArrowLeft,
   Save,
   Trash2,
-  GripVertical
+  GripVertical,
 } from 'lucide-react';
+import { ImportExportQuestions } from '@/components/admin/ImportExportQuestions';
 import {
   Select,
   SelectContent,
@@ -397,12 +398,18 @@ const ExamEditor = () => {
 
           {/* Questions */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-3">
               <h2 className="text-xl font-semibold">Câu hỏi ({questions.length})</h2>
-              <Button onClick={addQuestion} variant="outline" className="gap-2">
-                <Plus className="w-4 h-4" />
-                Thêm câu hỏi
-              </Button>
+              <div className="flex items-center gap-2 flex-wrap">
+                <ImportExportQuestions 
+                  questions={questions} 
+                  onImport={setQuestions} 
+                />
+                <Button onClick={addQuestion} variant="outline" className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  Thêm câu hỏi
+                </Button>
+              </div>
             </div>
 
             {questions.length === 0 ? (
