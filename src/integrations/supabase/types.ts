@@ -739,6 +739,10 @@ export type Database = {
           option_b: string
           option_c: string | null
           option_d: string | null
+          option_e: string | null
+          option_f: string | null
+          option_g: string | null
+          option_h: string | null
           question_order: number | null
           question_text: string
         }
@@ -752,6 +756,10 @@ export type Database = {
           option_b: string
           option_c?: string | null
           option_d?: string | null
+          option_e?: string | null
+          option_f?: string | null
+          option_g?: string | null
+          option_h?: string | null
           question_order?: number | null
           question_text: string
         }
@@ -765,6 +773,10 @@ export type Database = {
           option_b?: string
           option_c?: string | null
           option_d?: string | null
+          option_e?: string | null
+          option_f?: string | null
+          option_g?: string | null
+          option_h?: string | null
           question_order?: number | null
           question_text?: string
         }

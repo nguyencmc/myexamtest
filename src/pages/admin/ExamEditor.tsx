@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -16,7 +15,6 @@ import {
   Save,
   Trash2,
   GripVertical,
-  Sparkles,
 } from 'lucide-react';
 import { ImportExportQuestions } from '@/components/admin/ImportExportQuestions';
 import { AIQuestionGenerator } from '@/components/ai/AIQuestionGenerator';
@@ -47,6 +45,10 @@ interface Question {
   option_b: string;
   option_c: string;
   option_d: string;
+  option_e: string;
+  option_f: string;
+  option_g: string;
+  option_h: string;
   correct_answer: string;
   explanation: string;
   question_order: number;
@@ -132,7 +134,13 @@ const ExamEditor = () => {
       .eq('exam_id', id)
       .order('question_order', { ascending: true });
 
-    setQuestions(questionsData || []);
+    setQuestions(questionsData?.map(q => ({
+      ...q,
+      option_e: q.option_e || '',
+      option_f: q.option_f || '',
+      option_g: q.option_g || '',
+      option_h: q.option_h || '',
+    })) || []);
     setLoading(false);
   };
 
@@ -162,6 +170,10 @@ const ExamEditor = () => {
         option_b: '',
         option_c: '',
         option_d: '',
+        option_e: '',
+        option_f: '',
+        option_g: '',
+        option_h: '',
         correct_answer: 'A',
         explanation: '',
         question_order: questions.length + 1,
@@ -243,6 +255,10 @@ const ExamEditor = () => {
           option_b: q.option_b,
           option_c: q.option_c || null,
           option_d: q.option_d || null,
+          option_e: q.option_e || null,
+          option_f: q.option_f || null,
+          option_g: q.option_g || null,
+          option_h: q.option_h || null,
           correct_answer: q.correct_answer,
           explanation: q.explanation || null,
           question_order: index + 1,
@@ -270,6 +286,21 @@ const ExamEditor = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  // Get available answer options based on filled options
+  const getAvailableAnswers = (question: Question) => {
+    const options: { value: string; label: string }[] = [
+      { value: 'A', label: 'A' },
+      { value: 'B', label: 'B' },
+    ];
+    if (question.option_c) options.push({ value: 'C', label: 'C' });
+    if (question.option_d) options.push({ value: 'D', label: 'D' });
+    if (question.option_e) options.push({ value: 'E', label: 'E' });
+    if (question.option_f) options.push({ value: 'F', label: 'F' });
+    if (question.option_g) options.push({ value: 'G', label: 'G' });
+    if (question.option_h) options.push({ value: 'H', label: 'H' });
+    return options;
   };
 
   if (roleLoading || loading) {
@@ -410,6 +441,10 @@ const ExamEditor = () => {
                   option_b: q.option_b,
                   option_c: q.option_c,
                   option_d: q.option_d,
+                  option_e: '',
+                  option_f: '',
+                  option_g: '',
+                  option_h: '',
                   correct_answer: q.correct_answer,
                   explanation: q.explanation,
                   question_order: questions.length + i + 1,
@@ -520,6 +555,38 @@ const ExamEditor = () => {
                             placeholder="Đáp án D"
                           />
                         </div>
+                        <div>
+                          <Label>Đáp án E</Label>
+                          <Input
+                            value={question.option_e}
+                            onChange={(e) => updateQuestion(index, 'option_e', e.target.value)}
+                            placeholder="Đáp án E"
+                          />
+                        </div>
+                        <div>
+                          <Label>Đáp án F</Label>
+                          <Input
+                            value={question.option_f}
+                            onChange={(e) => updateQuestion(index, 'option_f', e.target.value)}
+                            placeholder="Đáp án F"
+                          />
+                        </div>
+                        <div>
+                          <Label>Đáp án G</Label>
+                          <Input
+                            value={question.option_g}
+                            onChange={(e) => updateQuestion(index, 'option_g', e.target.value)}
+                            placeholder="Đáp án G"
+                          />
+                        </div>
+                        <div>
+                          <Label>Đáp án H</Label>
+                          <Input
+                            value={question.option_h}
+                            onChange={(e) => updateQuestion(index, 'option_h', e.target.value)}
+                            placeholder="Đáp án H"
+                          />
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-3">
@@ -533,10 +600,9 @@ const ExamEditor = () => {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="A">A</SelectItem>
-                              <SelectItem value="B">B</SelectItem>
-                              <SelectItem value="C">C</SelectItem>
-                              <SelectItem value="D">D</SelectItem>
+                              {getAvailableAnswers(question).map(opt => (
+                                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </div>
