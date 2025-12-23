@@ -13,6 +13,7 @@ import {
 
 const navLinks = [
   { name: "Luyện thi", href: "/exams" },
+  { name: "Flashcards", href: "/flashcards" },
   { name: "Podcasts", href: "/podcasts" },
   { name: "Khóa học", href: "/courses" },
   { name: "Sách", href: "/books" },
