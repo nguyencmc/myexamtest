@@ -145,6 +145,12 @@ export const Header = () => {
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem asChild>
+                    <Link to="/achievements">
+                      <Trophy className="w-4 h-4 mr-2" />
+                      Thành tựu
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link to="/history">
                       <History className="w-4 h-4 mr-2" />
                       Lịch sử làm bài

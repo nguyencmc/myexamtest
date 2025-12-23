@@ -11,6 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { SmartRecommendations } from '@/components/ai/SmartRecommendations';
 import { AITutorButton } from '@/components/ai/AITutorButton';
+import { AchievementsBadgeDisplay } from '@/components/achievements/AchievementsBadgeDisplay';
+import { useAchievements } from '@/hooks/useAchievements';
 import { 
   BookOpen, 
   FileText, 
@@ -60,6 +62,7 @@ interface WeeklyProgress {
 const StudentDashboard = () => {
   const { user } = useAuth();
   const { isAdmin, isTeacher } = useUserRole();
+  const { checkAndAwardAchievements, getUserProgress } = useAchievements();
   
   const [stats, setStats] = useState<Stats>({
     totalExamsTaken: 0,
@@ -77,10 +80,17 @@ const StudentDashboard = () => {
   useEffect(() => {
     if (user) {
       fetchData();
+      // Check achievements on load
+      checkAchievements();
     } else {
       setLoading(false);
     }
   }, [user]);
+
+  const checkAchievements = async () => {
+    const progress = await getUserProgress();
+    await checkAndAwardAchievements(progress);
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -429,6 +439,10 @@ const StudentDashboard = () => {
 
           {/* Right Column - Recent Activity */}
           <div className="space-y-6">
+            {/* Achievements */}
+            <Link to="/achievements">
+              <AchievementsBadgeDisplay />
+            </Link>
             {/* Performance Summary */}
             <Card className="border-border/50">
               <CardHeader>

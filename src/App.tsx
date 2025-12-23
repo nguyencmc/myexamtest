@@ -33,6 +33,7 @@ import FlashcardEditor from "./pages/admin/FlashcardEditor";
 import PodcastManagement from "./pages/admin/PodcastManagement";
 import PodcastEditor from "./pages/admin/PodcastEditor";
 import StudentDashboard from "./pages/StudentDashboard";
+import Achievements from "./pages/Achievements";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +62,7 @@ const App = () => (
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/dashboard" element={<StudentDashboard />} />
+            <Route path="/achievements" element={<Achievements />} />
             <Route path="/@:username" element={<UserProfile />} />
             
             {/* Admin & Teacher routes */}
