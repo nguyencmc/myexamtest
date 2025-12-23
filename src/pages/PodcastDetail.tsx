@@ -26,8 +26,15 @@ import {
   Heart,
   FileText,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Gauge
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Podcast {
   id: string;
@@ -78,6 +85,9 @@ const PodcastDetail = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [isRepeat, setIsRepeat] = useState(false);
   const [showTranscript, setShowTranscript] = useState(true);
+  const [playbackRate, setPlaybackRate] = useState(1);
+
+  const playbackRates = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
   // Fetch podcast
   const { data: podcast, isLoading } = useQuery({
@@ -157,6 +167,12 @@ const PodcastDetail = () => {
       audioRef.current.volume = isMuted ? 0 : volume;
     }
   }, [volume, isMuted]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.playbackRate = playbackRate;
+    }
+  }, [playbackRate]);
 
   const togglePlay = () => {
     if (!audioRef.current) return;
@@ -394,6 +410,31 @@ const PodcastDetail = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
+                      {/* Playback Speed */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-white/70 hover:text-white hover:bg-white/10 gap-1 font-medium min-w-[52px]"
+                          >
+                            <Gauge className="w-4 h-4" />
+                            {playbackRate}x
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="min-w-[120px]">
+                          {playbackRates.map((rate) => (
+                            <DropdownMenuItem
+                              key={rate}
+                              onClick={() => setPlaybackRate(rate)}
+                              className={playbackRate === rate ? "bg-accent font-medium" : ""}
+                            >
+                              {rate}x {rate === 1 && "(Bình thường)"}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+
                       <Button
                         variant="ghost"
                         size="icon"
