@@ -85,9 +85,9 @@ const PodcastDetail = () => {
         .from("podcasts")
         .select("*")
         .eq("slug", slug)
-        .single();
+        .maybeSingle();
       if (error) throw error;
-      return data as Podcast;
+      return data as Podcast | null;
     },
   });
 
@@ -100,9 +100,9 @@ const PodcastDetail = () => {
         .from("podcast_categories")
         .select("*")
         .eq("id", podcast.category_id)
-        .single();
+        .maybeSingle();
       if (error) throw error;
-      return data as PodcastCategory;
+      return data as PodcastCategory | null;
     },
     enabled: !!podcast?.category_id,
   });
