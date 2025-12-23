@@ -284,6 +284,107 @@ export type Database = {
           },
         ]
       }
+      podcast_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number | null
+          icon_url: string | null
+          id: string
+          is_featured: boolean | null
+          name: string
+          podcast_count: number | null
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          icon_url?: string | null
+          id?: string
+          is_featured?: boolean | null
+          name: string
+          podcast_count?: number | null
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          icon_url?: string | null
+          id?: string
+          is_featured?: boolean | null
+          name?: string
+          podcast_count?: number | null
+          slug?: string
+        }
+        Relationships: []
+      }
+      podcasts: {
+        Row: {
+          audio_url: string | null
+          category_id: string | null
+          created_at: string
+          description: string | null
+          difficulty: string | null
+          duration_seconds: number | null
+          episode_number: number | null
+          host_name: string | null
+          id: string
+          is_featured: boolean | null
+          listen_count: number | null
+          slug: string
+          thumbnail_url: string | null
+          title: string
+          transcript: string | null
+          updated_at: string
+        }
+        Insert: {
+          audio_url?: string | null
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          difficulty?: string | null
+          duration_seconds?: number | null
+          episode_number?: number | null
+          host_name?: string | null
+          id?: string
+          is_featured?: boolean | null
+          listen_count?: number | null
+          slug: string
+          thumbnail_url?: string | null
+          title: string
+          transcript?: string | null
+          updated_at?: string
+        }
+        Update: {
+          audio_url?: string | null
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          difficulty?: string | null
+          duration_seconds?: number | null
+          episode_number?: number | null
+          host_name?: string | null
+          id?: string
+          is_featured?: boolean | null
+          listen_count?: number | null
+          slug?: string
+          thumbnail_url?: string | null
+          title?: string
+          transcript?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "podcasts_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "podcast_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
