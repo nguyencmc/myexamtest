@@ -18,7 +18,8 @@ import {
   Activity,
   Settings,
   ChevronRight,
-  Plus
+  Plus,
+  Download
 } from 'lucide-react';
 import {
   Table,
@@ -74,6 +75,7 @@ const AdminDashboard = () => {
   });
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     if (!roleLoading && !isAdmin) {
@@ -211,6 +213,43 @@ const AdminDashboard = () => {
     fetchUsers();
   };
 
+  const handleExportDatabase = async () => {
+    setExporting(true);
+    try {
+      const response = await supabase.functions.invoke('export-database');
+      
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      const jsonData = JSON.stringify(response.data, null, 2);
+      const blob = new Blob([jsonData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `database-export-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Thành công",
+        description: "Đã xuất database ra file JSON",
+      });
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể xuất database",
+        variant: "destructive",
+      });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (roleLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -283,6 +322,15 @@ const AdminDashboard = () => {
                 Quản lý Podcast
               </Button>
             </Link>
+            <Button 
+              variant="outline" 
+              className="gap-2"
+              onClick={handleExportDatabase}
+              disabled={exporting}
+            >
+              <Download className="w-4 h-4" />
+              {exporting ? 'Đang xuất...' : 'Xuất Database'}
+            </Button>
           </div>
         </div>
 
