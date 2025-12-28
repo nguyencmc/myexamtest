@@ -115,28 +115,47 @@ export const ImportExportQuestions = ({ questions, onImport }: ImportExportQuest
       const lines = block.trim().split('\n').map(l => l.trim()).filter(l => l);
       if (lines.length < 3) continue;
       
-      // Match: Q1: , Question 1: , Câu 1: , Question: , or just the question text
-      const questionMatch = lines[0].match(/^(?:Q(?:uestion)?\s*\d*[.:]\s*|Câu\s*\d*[.:]\s*)?(.+)/i);
-      const question = questionMatch ? questionMatch[1] : lines[0];
+      // Find where the question ends and options begin
+      // Question starts with "Question", "Câu", "Câu hỏi", "Q", or number pattern
+      // Options start with A. B. C. etc.
+      const questionLines: string[] = [];
+      let optionStartIndex = -1;
+      
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        // Check if this line starts an option (A. A) A: etc.)
+        if (/^[A-Ha-h][.):]\s*\S/.test(line) || /^\*\s*[A-Ha-h][.):]/i.test(line) || /^\[x\]\s*[A-Ha-h][.):]/i.test(line)) {
+          optionStartIndex = i;
+          break;
+        }
+        questionLines.push(line);
+      }
+      
+      if (optionStartIndex === -1 || questionLines.length === 0) continue;
+      
+      // Join all question lines and clean up the question prefix
+      let questionText = questionLines.join(' ');
+      // Remove common prefixes like "Question 1:", "Câu 1:", "Câu hỏi 1:", "Q1:", etc.
+      questionText = questionText.replace(/^(?:Question|Câu\s*hỏi|Câu|Q)\s*\d*[.:)]\s*/i, '').trim();
       
       let optionA = '', optionB = '', optionC = '', optionD = '';
       let optionE = '', optionF = '', optionG = '', optionH = '';
       let correctAnswer = 'A';
       let explanation = '';
       
-      for (let i = 1; i < lines.length; i++) {
+      for (let i = optionStartIndex; i < lines.length; i++) {
         const line = lines[i];
         
         // Check for correct answer marker (*, [x], ✓, (correct))
         const isCorrect = /^\*|^\[x\]|✓|✔|\(correct\)|\(đúng\)/i.test(line);
         const cleanLine = line.replace(/^\*|\[x\]|✓|✔|\(correct\)|\(đúng\)/gi, '').trim();
         
-        // Match options A-H
+        // Match options A-H with various formats: A. A) A:
         const optionMatch = cleanLine.match(/^([A-Ha-h])[.:)]\s*(.+)/);
         
         if (optionMatch) {
           const letter = optionMatch[1].toUpperCase();
-          const text = optionMatch[2];
+          const text = optionMatch[2].trim();
           
           if (letter === 'A') optionA = text;
           if (letter === 'B') optionB = text;
@@ -150,15 +169,15 @@ export const ImportExportQuestions = ({ questions, onImport }: ImportExportQuest
           if (isCorrect) correctAnswer = letter;
         } else if (/^(Giải thích|Explanation|Answer)[.:]/i.test(cleanLine)) {
           explanation = cleanLine.replace(/^(Giải thích|Explanation|Answer)[.:]\s*/i, '');
-        } else if (/^(Đáp án|Correct)[.:]\s*([A-Ha-h])/i.test(cleanLine)) {
+        } else if (/^(Đáp án|Correct|Đáp án đúng)[.:]\s*([A-Ha-h])/i.test(cleanLine)) {
           const match = cleanLine.match(/([A-Ha-h])/i);
           if (match) correctAnswer = match[1].toUpperCase();
         }
       }
       
-      if (question && optionA && optionB) {
+      if (questionText && optionA && optionB) {
         result.push({
-          question_text: question,
+          question_text: questionText,
           option_a: optionA,
           option_b: optionB,
           option_c: optionC,
