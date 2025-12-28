@@ -4,60 +4,30 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { 
   FileText, 
-  Plus,
   ArrowLeft,
+  ArrowRight,
   Save,
-  Trash2,
-  GripVertical,
+  Loader2,
 } from 'lucide-react';
-import { ImportExportQuestions } from '@/components/admin/ImportExportQuestions';
-import { AIQuestionGenerator } from '@/components/ai/AIQuestionGenerator';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
-
-interface Question {
-  id?: string;
-  question_text: string;
-  option_a: string;
-  option_b: string;
-  option_c: string;
-  option_d: string;
-  option_e: string;
-  option_f: string;
-  option_g: string;
-  option_h: string;
-  correct_answer: string;
-  explanation: string;
-  question_order: number;
-}
+import { StepIndicator } from '@/components/admin/exam/StepIndicator';
+import { ExamInfoStep } from '@/components/admin/exam/ExamInfoStep';
+import { CreateQuestionsStep } from '@/components/admin/exam/CreateQuestionsStep';
+import { ReviewStep } from '@/components/admin/exam/ReviewStep';
+import { type Question } from '@/components/admin/exam/QuestionEditor';
 
 interface ExamCategory {
   id: string;
   name: string;
 }
+
+const STEPS = [
+  { id: 1, title: 'Thông tin', description: 'Nhập thông tin đề thi' },
+  { id: 2, title: 'Tạo câu hỏi', description: 'Thêm câu hỏi vào đề' },
+  { id: 3, title: 'Xem lại', description: 'Kiểm tra và lưu' },
+];
 
 const ExamEditor = () => {
   const { id } = useParams();
@@ -66,6 +36,7 @@ const ExamEditor = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
+  const [currentStep, setCurrentStep] = useState(1);
   const [categories, setCategories] = useState<ExamCategory[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -154,43 +125,6 @@ const ExamEditor = () => {
       .replace(/(^-|-$)/g, '');
   };
 
-  const handleTitleChange = (value: string) => {
-    setTitle(value);
-    if (!isEditing) {
-      setSlug(generateSlug(value));
-    }
-  };
-
-  const addQuestion = () => {
-    setQuestions([
-      ...questions,
-      {
-        question_text: '',
-        option_a: '',
-        option_b: '',
-        option_c: '',
-        option_d: '',
-        option_e: '',
-        option_f: '',
-        option_g: '',
-        option_h: '',
-        correct_answer: 'A',
-        explanation: '',
-        question_order: questions.length + 1,
-      },
-    ]);
-  };
-
-  const updateQuestion = (index: number, field: keyof Question, value: string | number) => {
-    const updated = [...questions];
-    (updated[index] as any)[field] = value;
-    setQuestions(updated);
-  };
-
-  const removeQuestion = (index: number) => {
-    setQuestions(questions.filter((_, i) => i !== index));
-  };
-
   const handleSave = async () => {
     if (!title.trim() || !slug.trim()) {
       toast({
@@ -198,6 +132,17 @@ const ExamEditor = () => {
         description: "Vui lòng nhập tiêu đề và slug",
         variant: "destructive",
       });
+      setCurrentStep(1);
+      return;
+    }
+
+    if (questions.length === 0) {
+      toast({
+        title: "Lỗi",
+        description: "Vui lòng thêm ít nhất 1 câu hỏi",
+        variant: "destructive",
+      });
+      setCurrentStep(2);
       return;
     }
 
@@ -288,19 +233,35 @@ const ExamEditor = () => {
     }
   };
 
-  // Get available answer options based on filled options
-  const getAvailableAnswers = (question: Question) => {
-    const options: { value: string; label: string }[] = [
-      { value: 'A', label: 'A' },
-      { value: 'B', label: 'B' },
-    ];
-    if (question.option_c) options.push({ value: 'C', label: 'C' });
-    if (question.option_d) options.push({ value: 'D', label: 'D' });
-    if (question.option_e) options.push({ value: 'E', label: 'E' });
-    if (question.option_f) options.push({ value: 'F', label: 'F' });
-    if (question.option_g) options.push({ value: 'G', label: 'G' });
-    if (question.option_h) options.push({ value: 'H', label: 'H' });
-    return options;
+  const handleNext = () => {
+    if (currentStep === 1 && (!title.trim() || !slug.trim())) {
+      toast({
+        title: "Thiếu thông tin",
+        description: "Vui lòng nhập tiêu đề và slug trước khi tiếp tục",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (currentStep < 3) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const getCategoryName = () => {
+    return categories.find(c => c.id === categoryId)?.name;
+  };
+
+  // Image upload handler (placeholder - needs storage bucket setup)
+  const handleImageUpload = async (file: File, questionIndex: number, field: string): Promise<string> => {
+    // TODO: Implement actual upload to Supabase Storage
+    // For now, create a local URL
+    return URL.createObjectURL(file);
   };
 
   if (roleLoading || loading) {
@@ -326,299 +287,111 @@ const ExamEditor = () => {
       
       <main className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Link to="/admin/exams">
-              <Button variant="ghost" size="icon">
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-                <FileText className="w-8 h-8 text-primary" />
-                {isEditing ? 'Chỉnh sửa đề thi' : 'Tạo đề thi mới'}
-              </h1>
-            </div>
+        <div className="flex items-center gap-4 mb-8">
+          <Link to="/admin/exams">
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
+              <FileText className="w-7 h-7 text-primary" />
+              {isEditing ? 'Chỉnh sửa đề thi' : 'Tạo đề thi mới'}
+            </h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              {title || 'Đề thi chưa có tên'}
+            </p>
           </div>
-          <Button onClick={handleSave} disabled={saving} className="gap-2">
-            <Save className="w-4 h-4" />
-            {saving ? 'Đang lưu...' : 'Lưu đề thi'}
-          </Button>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Exam Details */}
-          <div className="lg:col-span-1 space-y-6">
-            <Card className="border-border/50">
-              <CardHeader>
-                <CardTitle>Thông tin đề thi</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="title">Tiêu đề *</Label>
-                  <Input
-                    id="title"
-                    value={title}
-                    onChange={(e) => handleTitleChange(e.target.value)}
-                    placeholder="Nhập tiêu đề đề thi"
-                  />
-                </div>
+        {/* Step Indicator */}
+        <div className="mb-8 max-w-3xl mx-auto">
+          <StepIndicator 
+            steps={STEPS} 
+            currentStep={currentStep}
+            onStepClick={(step) => {
+              if (step < currentStep || (step === 2 && title && slug) || step === currentStep) {
+                setCurrentStep(step);
+              }
+            }}
+          />
+        </div>
 
-                <div>
-                  <Label htmlFor="slug">Slug *</Label>
-                  <Input
-                    id="slug"
-                    value={slug}
-                    onChange={(e) => setSlug(e.target.value)}
-                    placeholder="ten-de-thi"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="description">Mô tả</Label>
-                  <Textarea
-                    id="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Mô tả về đề thi"
-                    rows={3}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="category">Danh mục</Label>
-                  <Select value={categoryId} onValueChange={setCategoryId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Chọn danh mục" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="difficulty">Độ khó</Label>
-                  <Select value={difficulty} onValueChange={setDifficulty}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="easy">Dễ</SelectItem>
-                      <SelectItem value="medium">Trung bình</SelectItem>
-                      <SelectItem value="hard">Khó</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="duration">Thời gian (phút)</Label>
-                  <Input
-                    id="duration"
-                    type="number"
-                    value={durationMinutes}
-                    onChange={(e) => setDurationMinutes(parseInt(e.target.value) || 60)}
-                    min={1}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Questions */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* AI Question Generator */}
-            <AIQuestionGenerator 
-              examId={id}
-              onQuestionsGenerated={(newQuestions) => {
-                const mapped = newQuestions.map((q, i) => ({
-                  question_text: q.question_text,
-                  option_a: q.option_a,
-                  option_b: q.option_b,
-                  option_c: q.option_c,
-                  option_d: q.option_d,
-                  option_e: '',
-                  option_f: '',
-                  option_g: '',
-                  option_h: '',
-                  correct_answer: q.correct_answer,
-                  explanation: q.explanation,
-                  question_order: questions.length + i + 1,
-                }));
-                setQuestions([...questions, ...mapped]);
-              }}
+        {/* Step Content */}
+        <div className="mb-8">
+          {currentStep === 1 && (
+            <ExamInfoStep
+              title={title}
+              slug={slug}
+              description={description}
+              categoryId={categoryId}
+              difficulty={difficulty}
+              durationMinutes={durationMinutes}
+              categories={categories}
+              isEditing={isEditing}
+              onTitleChange={setTitle}
+              onSlugChange={setSlug}
+              onDescriptionChange={setDescription}
+              onCategoryChange={setCategoryId}
+              onDifficultyChange={setDifficulty}
+              onDurationChange={setDurationMinutes}
             />
+          )}
 
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <h2 className="text-xl font-semibold">Câu hỏi ({questions.length})</h2>
-              <div className="flex items-center gap-2 flex-wrap">
-                <ImportExportQuestions 
-                  questions={questions} 
-                  onImport={setQuestions} 
-                />
-                <Button onClick={addQuestion} variant="outline" className="gap-2">
-                  <Plus className="w-4 h-4" />
-                  Thêm câu hỏi
-                </Button>
-              </div>
-            </div>
+          {currentStep === 2 && (
+            <CreateQuestionsStep
+              questions={questions}
+              onQuestionsChange={setQuestions}
+              onImageUpload={handleImageUpload}
+            />
+          )}
 
-            {questions.length === 0 ? (
-              <Card className="border-border/50 border-dashed">
-                <CardContent className="py-12 text-center">
-                  <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground mb-4">Chưa có câu hỏi nào</p>
-                  <Button onClick={addQuestion}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Thêm câu hỏi đầu tiên
-                  </Button>
-                </CardContent>
-              </Card>
+          {currentStep === 3 && (
+            <ReviewStep
+              title={title}
+              description={description}
+              categoryName={getCategoryName()}
+              difficulty={difficulty}
+              durationMinutes={durationMinutes}
+              questions={questions}
+              onEditInfo={() => setCurrentStep(1)}
+              onEditQuestions={() => setCurrentStep(2)}
+            />
+          )}
+        </div>
+
+        {/* Navigation Buttons */}
+        <div className="flex items-center justify-between max-w-3xl mx-auto pt-6 border-t">
+          <Button
+            variant="outline"
+            onClick={handleBack}
+            disabled={currentStep === 1}
+            className="gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Quay lại
+          </Button>
+
+          <div className="flex gap-3">
+            {currentStep < 3 ? (
+              <Button onClick={handleNext} className="gap-2">
+                Tiếp theo
+                <ArrowRight className="w-4 h-4" />
+              </Button>
             ) : (
-              <div className="space-y-4">
-                {questions.map((question, index) => (
-                  <Card key={index} className="border-border/50">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <GripVertical className="w-4 h-4 text-muted-foreground" />
-                          <CardTitle className="text-base">Câu {index + 1}</CardTitle>
-                        </div>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-destructive">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Xóa câu hỏi?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Hành động này không thể hoàn tác.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Hủy</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => removeQuestion(index)}>
-                                Xóa
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <Label>Nội dung câu hỏi *</Label>
-                        <Textarea
-                          value={question.question_text}
-                          onChange={(e) => updateQuestion(index, 'question_text', e.target.value)}
-                          placeholder="Nhập câu hỏi..."
-                          rows={2}
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label>Đáp án A *</Label>
-                          <Input
-                            value={question.option_a}
-                            onChange={(e) => updateQuestion(index, 'option_a', e.target.value)}
-                            placeholder="Đáp án A"
-                          />
-                        </div>
-                        <div>
-                          <Label>Đáp án B *</Label>
-                          <Input
-                            value={question.option_b}
-                            onChange={(e) => updateQuestion(index, 'option_b', e.target.value)}
-                            placeholder="Đáp án B"
-                          />
-                        </div>
-                        <div>
-                          <Label>Đáp án C</Label>
-                          <Input
-                            value={question.option_c}
-                            onChange={(e) => updateQuestion(index, 'option_c', e.target.value)}
-                            placeholder="Đáp án C"
-                          />
-                        </div>
-                        <div>
-                          <Label>Đáp án D</Label>
-                          <Input
-                            value={question.option_d}
-                            onChange={(e) => updateQuestion(index, 'option_d', e.target.value)}
-                            placeholder="Đáp án D"
-                          />
-                        </div>
-                        <div>
-                          <Label>Đáp án E</Label>
-                          <Input
-                            value={question.option_e}
-                            onChange={(e) => updateQuestion(index, 'option_e', e.target.value)}
-                            placeholder="Đáp án E"
-                          />
-                        </div>
-                        <div>
-                          <Label>Đáp án F</Label>
-                          <Input
-                            value={question.option_f}
-                            onChange={(e) => updateQuestion(index, 'option_f', e.target.value)}
-                            placeholder="Đáp án F"
-                          />
-                        </div>
-                        <div>
-                          <Label>Đáp án G</Label>
-                          <Input
-                            value={question.option_g}
-                            onChange={(e) => updateQuestion(index, 'option_g', e.target.value)}
-                            placeholder="Đáp án G"
-                          />
-                        </div>
-                        <div>
-                          <Label>Đáp án H</Label>
-                          <Input
-                            value={question.option_h}
-                            onChange={(e) => updateQuestion(index, 'option_h', e.target.value)}
-                            placeholder="Đáp án H"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label>Đáp án đúng *</Label>
-                          <Select 
-                            value={question.correct_answer} 
-                            onValueChange={(value) => updateQuestion(index, 'correct_answer', value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {getAvailableAnswers(question).map(opt => (
-                                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label>Giải thích</Label>
-                          <Input
-                            value={question.explanation}
-                            onChange={(e) => updateQuestion(index, 'explanation', e.target.value)}
-                            placeholder="Giải thích đáp án..."
-                          />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <Button onClick={handleSave} disabled={saving} className="gap-2">
+                {saving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Đang lưu...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Lưu đề thi
+                  </>
+                )}
+              </Button>
             )}
           </div>
         </div>
