@@ -552,9 +552,11 @@ const ExamTaking = () => {
                   variant="outline"
                   onClick={() => setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))}
                   disabled={currentQuestionIndex === 0}
+                  className="md:px-4"
+                  size="icon"
                 >
-                  <ChevronLeft className="w-4 h-4 mr-2" />
-                  Câu trước
+                  <ChevronLeft className="w-4 h-4 md:mr-2" />
+                  <span className="hidden md:inline">Câu trước</span>
                 </Button>
 
                 {/* Flag Button */}
@@ -562,10 +564,11 @@ const ExamTaking = () => {
                   <Button
                     variant={flaggedQuestions.has(currentQuestion.id) ? "default" : "outline"}
                     onClick={() => toggleFlag(currentQuestion.id)}
-                    className={flaggedQuestions.has(currentQuestion.id) ? "bg-orange-500 hover:bg-orange-600" : ""}
+                    className={`md:px-4 ${flaggedQuestions.has(currentQuestion.id) ? "bg-orange-500 hover:bg-orange-600" : ""}`}
+                    size="icon"
                   >
-                    <Flag className="w-4 h-4 mr-2" />
-                    {flaggedQuestions.has(currentQuestion.id) ? "Bỏ đánh dấu" : "Đánh dấu"}
+                    <Flag className="w-4 h-4 md:mr-2" />
+                    <span className="hidden md:inline">{flaggedQuestions.has(currentQuestion.id) ? "Bỏ đánh dấu" : "Đánh dấu"}</span>
                   </Button>
                 )}
 
@@ -573,16 +576,18 @@ const ExamTaking = () => {
                   variant="outline"
                   onClick={() => setCurrentQuestionIndex((prev) => Math.min(questions.length - 1, prev + 1))}
                   disabled={currentQuestionIndex === questions.length - 1}
+                  className="md:px-4"
+                  size="icon"
                 >
-                  Câu sau
-                  <ChevronRight className="w-4 h-4 ml-2" />
+                  <span className="hidden md:inline">Câu sau</span>
+                  <ChevronRight className="w-4 h-4 md:ml-2" />
                 </Button>
               </div>
             </div>
           </div>
 
-          {/* Question Navigator */}
-          <div className="lg:col-span-1">
+          {/* Question Navigator - Desktop Only */}
+          <div className="hidden lg:block lg:col-span-1">
             <div className="bg-card border border-border rounded-xl p-4 sticky top-32">
               <div className="flex items-center gap-2 mb-4">
                 <List className="w-4 h-4" />
