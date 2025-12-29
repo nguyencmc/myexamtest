@@ -257,11 +257,35 @@ const ExamEditor = () => {
     return categories.find(c => c.id === categoryId)?.name;
   };
 
-  // Image upload handler (placeholder - needs storage bucket setup)
+  // Image upload handler with date-based folder structure
   const handleImageUpload = async (file: File, questionIndex: number, field: string): Promise<string> => {
-    // TODO: Implement actual upload to Supabase Storage
-    // For now, create a local URL
-    return URL.createObjectURL(file);
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    
+    // Generate unique filename
+    const ext = file.name.split('.').pop();
+    const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const fileName = `${year}/${month}/${day}/${uniqueId}.${ext}`;
+    
+    const { data, error } = await supabase.storage
+      .from('question-images')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('question-images')
+      .getPublicUrl(data.path);
+
+    return urlData.publicUrl;
   };
 
   if (roleLoading || loading) {
