@@ -380,6 +380,11 @@ const ExamEditor = () => {
               questions={questions}
               onEditInfo={() => setCurrentStep(1)}
               onEditQuestions={() => setCurrentStep(2)}
+              onUpdateQuestion={(index, field, value) => {
+                setQuestions(prev => prev.map((q, i) => 
+                  i === index ? { ...q, [field]: value } : q
+                ));
+              }}
             />
           )}
         </div>

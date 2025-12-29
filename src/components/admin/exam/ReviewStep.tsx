@@ -2,7 +2,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { 
   FileText, 
   Clock, 
@@ -10,7 +9,8 @@ import {
   CheckCircle2, 
   AlertCircle,
   Edit,
-  FolderOpen
+  FolderOpen,
+  Check
 } from 'lucide-react';
 import { type Question } from './QuestionEditor';
 
@@ -23,6 +23,7 @@ interface ReviewStepProps {
   questions: Question[];
   onEditInfo: () => void;
   onEditQuestions: () => void;
+  onUpdateQuestion?: (index: number, field: keyof Question, value: string) => void;
 }
 
 export const ReviewStep = ({
@@ -34,6 +35,7 @@ export const ReviewStep = ({
   questions,
   onEditInfo,
   onEditQuestions,
+  onUpdateQuestion,
 }: ReviewStepProps) => {
   const getDifficultyLabel = (diff: string) => {
     switch (diff) {
@@ -48,6 +50,40 @@ export const ReviewStep = ({
   
   const validQuestions = questions.filter(q => q.question_text && q.option_a && q.option_b);
   const hasIssues = validQuestions.length < questions.length || questions.length === 0;
+
+  const optionLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+  
+  const getOptionField = (letter: string) => `option_${letter.toLowerCase()}` as keyof Question;
+
+  // Toggle correct answer (supports multiple)
+  const toggleCorrectAnswer = (questionIndex: number, letter: string) => {
+    if (!onUpdateQuestion) return;
+    
+    const question = questions[questionIndex];
+    const currentAnswers = question.correct_answer.split(',').map(a => a.trim()).filter(Boolean);
+    
+    const letterIndex = currentAnswers.indexOf(letter);
+    let newAnswers: string[];
+    
+    if (letterIndex === -1) {
+      // Add this answer
+      newAnswers = [...currentAnswers, letter].sort();
+    } else {
+      // Remove this answer (but keep at least one)
+      if (currentAnswers.length > 1) {
+        newAnswers = currentAnswers.filter(a => a !== letter);
+      } else {
+        return; // Don't allow removing the last answer
+      }
+    }
+    
+    onUpdateQuestion(questionIndex, 'correct_answer', newAnswers.join(','));
+  };
+
+  const isCorrectAnswer = (question: Question, letter: string) => {
+    const answers = question.correct_answer.split(',').map(a => a.trim());
+    return answers.includes(letter);
+  };
 
   return (
     <div className="space-y-6">
@@ -146,7 +182,7 @@ export const ReviewStep = ({
           <div>
             <CardTitle className="text-lg">Danh sách câu hỏi</CardTitle>
             <CardDescription>
-              {validQuestions.length} / {questions.length} câu hỏi hợp lệ
+              {validQuestions.length} / {questions.length} câu hỏi hợp lệ • Click vào chữ cái để chọn/bỏ chọn đáp án đúng
             </CardDescription>
           </div>
           <Button variant="outline" size="sm" onClick={onEditQuestions}>
@@ -164,12 +200,14 @@ export const ReviewStep = ({
               </p>
             </div>
           ) : (
-            <ScrollArea className="h-96">
-              <div className="space-y-3">
+            <ScrollArea className="h-[500px]">
+              <div className="space-y-4">
                 {questions.map((q, idx) => {
                   const isValid = q.question_text && q.option_a && q.option_b;
-                  const optionCount = [q.option_a, q.option_b, q.option_c, q.option_d, 
-                    q.option_e, q.option_f, q.option_g, q.option_h].filter(Boolean).length;
+                  const availableOptions = optionLabels.filter(
+                    letter => q[getOptionField(letter)]
+                  );
+                  const correctAnswers = q.correct_answer.split(',').map(a => a.trim()).filter(Boolean);
                   
                   return (
                     <div 
@@ -178,28 +216,83 @@ export const ReviewStep = ({
                         isValid ? 'bg-muted/30 border-border' : 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20'
                       }`}
                     >
-                      <div className="flex items-start gap-3">
+                      {/* Question Header */}
+                      <div className="flex items-start gap-3 mb-3">
                         <Badge variant={isValid ? "secondary" : "outline"} className="shrink-0 mt-0.5">
                           {idx + 1}
                         </Badge>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm line-clamp-2">
+                          <p className="font-medium text-sm">
                             {q.question_text || '(Chưa nhập câu hỏi)'}
                           </p>
-                          <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                            <span>{optionCount} đáp án</span>
-                            <span>Đáp án đúng: {q.correct_answer}</span>
-                            {q.question_image && (
-                              <Badge variant="outline" className="text-xs">
-                                Có ảnh
-                              </Badge>
-                            )}
-                          </div>
+                          {q.question_image && (
+                            <img 
+                              src={q.question_image} 
+                              alt="Question" 
+                              className="mt-2 max-h-32 rounded-lg border"
+                            />
+                          )}
                         </div>
                         {isValid ? (
                           <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
                         ) : (
                           <AlertCircle className="w-5 h-5 text-yellow-500 shrink-0" />
+                        )}
+                      </div>
+
+                      {/* Options with clickable letters */}
+                      <div className="grid gap-2 ml-8">
+                        {availableOptions.map((letter) => {
+                          const optionText = q[getOptionField(letter)] as string;
+                          const isCorrect = isCorrectAnswer(q, letter);
+                          
+                          return (
+                            <div 
+                              key={letter} 
+                              className={`flex items-center gap-2 p-2 rounded-md transition-colors ${
+                                isCorrect 
+                                  ? 'bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700' 
+                                  : 'bg-muted/50 border border-transparent hover:bg-muted'
+                              }`}
+                            >
+                              <button
+                                type="button"
+                                onClick={() => toggleCorrectAnswer(idx, letter)}
+                                className={`w-7 h-7 rounded-full flex items-center justify-center font-semibold text-sm transition-all ${
+                                  isCorrect
+                                    ? 'bg-green-500 text-white shadow-md'
+                                    : 'bg-muted-foreground/20 text-muted-foreground hover:bg-primary/20 hover:text-primary'
+                                }`}
+                                title={isCorrect ? 'Click để bỏ chọn' : 'Click để chọn làm đáp án đúng'}
+                              >
+                                {isCorrect ? <Check className="w-4 h-4" /> : letter}
+                              </button>
+                              <span className={`text-sm flex-1 ${isCorrect ? 'font-medium' : ''}`}>
+                                {optionText}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Correct answers indicator */}
+                      <div className="mt-3 ml-8 flex items-center gap-2 text-xs text-muted-foreground">
+                        <span>Đáp án đúng:</span>
+                        <div className="flex gap-1">
+                          {correctAnswers.map(answer => (
+                            <Badge 
+                              key={answer} 
+                              variant="default" 
+                              className="bg-green-500 hover:bg-green-600 text-xs px-1.5 py-0"
+                            >
+                              {answer}
+                            </Badge>
+                          ))}
+                        </div>
+                        {correctAnswers.length > 1 && (
+                          <Badge variant="outline" className="text-xs">
+                            Nhiều đáp án
+                          </Badge>
                         )}
                       </div>
                     </div>
