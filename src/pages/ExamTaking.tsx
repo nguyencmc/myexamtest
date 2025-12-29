@@ -19,8 +19,17 @@ import {
   Trophy,
   RotateCcw,
   Home,
-  List
+  List,
+  LayoutGrid,
+  Flag
 } from 'lucide-react';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -62,9 +71,11 @@ const ExamTaking = () => {
   
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [flaggedQuestions, setFlaggedQuestions] = useState<Set<string>>(new Set());
   const [timeLeft, setTimeLeft] = useState(0);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
+  const [showNavigator, setShowNavigator] = useState(false);
   const [startTime] = useState(Date.now());
 
   // Fetch exam details
@@ -155,6 +166,20 @@ const ExamTaking = () => {
     if (isSubmitted) return;
     setAnswers((prev) => ({ ...prev, [questionId]: answer }));
   };
+
+  const toggleFlag = (questionId: string) => {
+    setFlaggedQuestions((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(questionId)) {
+        newSet.delete(questionId);
+      } else {
+        newSet.add(questionId);
+      }
+      return newSet;
+    });
+  };
+
+  const flaggedCount = flaggedQuestions.size;
 
   const handleSubmit = useCallback(async () => {
     if (!questions || !exam) return;
@@ -376,13 +401,90 @@ const ExamTaking = () => {
               </Badge>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 md:gap-4">
+              {/* Mobile Question Navigator Button */}
+              <Drawer open={showNavigator} onOpenChange={setShowNavigator}>
+                <DrawerTrigger asChild>
+                  <Button variant="outline" size="icon" className="lg:hidden">
+                    <LayoutGrid className="w-4 h-4" />
+                  </Button>
+                </DrawerTrigger>
+                <DrawerContent className="max-h-[85vh]">
+                  <DrawerHeader>
+                    <DrawerTitle className="flex items-center gap-2">
+                      <LayoutGrid className="w-5 h-5" />
+                      Danh sách câu hỏi
+                    </DrawerTitle>
+                  </DrawerHeader>
+                  <div className="px-4 pb-6">
+                    {/* Legend */}
+                    <div className="flex flex-wrap gap-4 mb-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded bg-green-500/20 border border-green-500/30" />
+                        <span className="text-muted-foreground">Đã làm ({answeredCount})</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded bg-muted" />
+                        <span className="text-muted-foreground">Chưa làm ({questions.length - answeredCount})</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded bg-orange-500/20 border border-orange-500/30" />
+                        <span className="text-muted-foreground">Đánh dấu ({flaggedCount})</span>
+                      </div>
+                    </div>
+
+                    {/* Question Grid */}
+                    <div className="grid grid-cols-6 gap-2 max-h-[50vh] overflow-y-auto">
+                      {questions.map((q, index) => {
+                        const isAnswered = !!answers[q.id];
+                        const isCurrent = index === currentQuestionIndex;
+                        const isFlagged = flaggedQuestions.has(q.id);
+                        
+                        return (
+                          <button
+                            key={q.id}
+                            onClick={() => {
+                              setCurrentQuestionIndex(index);
+                              setShowNavigator(false);
+                            }}
+                            className={`relative w-full aspect-square rounded-lg text-sm font-medium transition-all ${
+                              isCurrent
+                                ? 'bg-primary text-primary-foreground'
+                                : isFlagged
+                                ? 'bg-orange-500/20 text-orange-500 border border-orange-500/30'
+                                : isAnswered
+                                ? 'bg-green-500/20 text-green-500 border border-green-500/30'
+                                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                            }`}
+                          >
+                            {index + 1}
+                            {isFlagged && (
+                              <Flag className="absolute top-0.5 right-0.5 w-2.5 h-2.5 text-orange-500" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <Button 
+                      onClick={() => {
+                        setShowNavigator(false);
+                        setShowSubmitDialog(true);
+                      }} 
+                      className="w-full mt-4"
+                    >
+                      Nộp bài ({answeredCount}/{questions.length})
+                    </Button>
+                  </div>
+                </DrawerContent>
+              </Drawer>
+
               {/* Timer */}
-              <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
+              <div className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg ${
                 timeLeft <= 60 ? 'bg-red-500/20 text-red-500' : 'bg-muted'
               }`}>
                 <Clock className="w-4 h-4" />
-                <span className="font-mono font-semibold">{formatTime(timeLeft)}</span>
+                <span className="font-mono font-semibold text-sm md:text-base">{formatTime(timeLeft)}</span>
               </div>
 
               <Button 
@@ -455,6 +557,18 @@ const ExamTaking = () => {
                   Câu trước
                 </Button>
 
+                {/* Flag Button */}
+                {currentQuestion && (
+                  <Button
+                    variant={flaggedQuestions.has(currentQuestion.id) ? "default" : "outline"}
+                    onClick={() => toggleFlag(currentQuestion.id)}
+                    className={flaggedQuestions.has(currentQuestion.id) ? "bg-orange-500 hover:bg-orange-600" : ""}
+                  >
+                    <Flag className="w-4 h-4 mr-2" />
+                    {flaggedQuestions.has(currentQuestion.id) ? "Bỏ đánh dấu" : "Đánh dấu"}
+                  </Button>
+                )}
+
                 <Button
                   variant="outline"
                   onClick={() => setCurrentQuestionIndex((prev) => Math.min(questions.length - 1, prev + 1))}
@@ -475,24 +589,42 @@ const ExamTaking = () => {
                 <h3 className="font-semibold text-foreground">Danh sách câu hỏi</h3>
               </div>
               
+              {/* Legend */}
+              <div className="flex flex-wrap gap-2 mb-3 text-xs">
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded bg-green-500/20 border border-green-500/30" />
+                  <span className="text-muted-foreground">Đã làm</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded bg-orange-500/20 border border-orange-500/30" />
+                  <span className="text-muted-foreground">Đánh dấu</span>
+                </div>
+              </div>
+
               <div className="grid grid-cols-5 gap-2">
                 {questions.map((q, index) => {
                   const isAnswered = !!answers[q.id];
                   const isCurrent = index === currentQuestionIndex;
+                  const isFlagged = flaggedQuestions.has(q.id);
                   
                   return (
                     <button
                       key={q.id}
                       onClick={() => setCurrentQuestionIndex(index)}
-                      className={`w-full aspect-square rounded-lg text-sm font-medium transition-all ${
+                      className={`relative w-full aspect-square rounded-lg text-sm font-medium transition-all ${
                         isCurrent
                           ? 'bg-primary text-primary-foreground'
+                          : isFlagged
+                          ? 'bg-orange-500/20 text-orange-500 border border-orange-500/30'
                           : isAnswered
                           ? 'bg-green-500/20 text-green-500 border border-green-500/30'
                           : 'bg-muted text-muted-foreground hover:bg-muted/80'
                       }`}
                     >
                       {index + 1}
+                      {isFlagged && (
+                        <Flag className="absolute top-0.5 right-0.5 w-2 h-2 text-orange-500" />
+                      )}
                     </button>
                   );
                 })}
