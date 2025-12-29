@@ -5,13 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Check } from 'lucide-react';
 import {
   Collapsible,
   CollapsibleContent,
@@ -84,7 +78,30 @@ export const QuestionEditor = ({
     letter => question[getOptionField(letter)]
   );
 
-  const availableAnswers = optionLabels.slice(0, Math.max(2, filledOptions.length));
+  // Parse correct answers (supports multiple)
+  const correctAnswers = question.correct_answer.split(',').map(a => a.trim()).filter(Boolean);
+
+  const isCorrectAnswer = (letter: string) => correctAnswers.includes(letter);
+
+  // Toggle correct answer (supports multiple)
+  const toggleCorrectAnswer = (letter: string) => {
+    const letterIndex = correctAnswers.indexOf(letter);
+    let newAnswers: string[];
+    
+    if (letterIndex === -1) {
+      // Add this answer
+      newAnswers = [...correctAnswers, letter].sort();
+    } else {
+      // Remove this answer (but keep at least one)
+      if (correctAnswers.length > 1) {
+        newAnswers = correctAnswers.filter(a => a !== letter);
+      } else {
+        return; // Don't allow removing the last answer
+      }
+    }
+    
+    onUpdate(index, 'correct_answer', newAnswers.join(','));
+  };
 
   const handleImageSelect = (field: string) => {
     setCurrentUploadField(field);
@@ -178,21 +195,17 @@ export const QuestionEditor = ({
             </CollapsibleTrigger>
             
             <div className="flex items-center gap-2">
-              <Select
-                value={question.correct_answer}
-                onValueChange={(value) => onUpdate(index, 'correct_answer', value)}
-              >
-                <SelectTrigger className="w-20 h-8">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableAnswers.map((letter) => (
-                    <SelectItem key={letter} value={letter}>
-                      {letter}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-1 mr-2">
+                <span className="text-xs text-muted-foreground mr-1">Đáp án:</span>
+                {correctAnswers.map(answer => (
+                  <span 
+                    key={answer} 
+                    className="bg-green-500 text-white text-xs px-1.5 py-0.5 rounded font-medium"
+                  >
+                    {answer}
+                  </span>
+                ))}
+              </div>
               
               <Button
                 variant="ghost"
@@ -272,13 +285,14 @@ export const QuestionEditor = ({
                   letter={letter}
                   value={question[getOptionField(letter)] as string}
                   imageUrl={question[getOptionImageField(letter)] as string}
-                  isCorrect={question.correct_answer === letter}
+                  isCorrect={isCorrectAnswer(letter)}
                   required={letter === 'A' || letter === 'B'}
                   onChange={(value) => onUpdate(index, getOptionField(letter), value)}
                   onImageSelect={onImageUpload ? () => handleImageSelect(getOptionImageField(letter)) : undefined}
                   onImageRemove={() => removeImage(getOptionImageField(letter))}
                   onInsertFormula={() => insertFormula(getOptionField(letter))}
                   isUploading={uploadingField === getOptionImageField(letter)}
+                  onToggleCorrect={() => toggleCorrectAnswer(letter)}
                 />
               ))}
               
@@ -296,13 +310,14 @@ export const QuestionEditor = ({
                       letter={letter}
                       value={question[getOptionField(letter)] as string}
                       imageUrl={question[getOptionImageField(letter)] as string}
-                      isCorrect={question.correct_answer === letter}
+                      isCorrect={isCorrectAnswer(letter)}
                       required={false}
                       onChange={(value) => onUpdate(index, getOptionField(letter), value)}
                       onImageSelect={onImageUpload ? () => handleImageSelect(getOptionImageField(letter)) : undefined}
                       onImageRemove={() => removeImage(getOptionImageField(letter))}
                       onInsertFormula={() => insertFormula(getOptionField(letter))}
                       isUploading={uploadingField === getOptionImageField(letter)}
+                      onToggleCorrect={() => toggleCorrectAnswer(letter)}
                     />
                   );
                 })
@@ -352,6 +367,7 @@ interface OptionInputProps {
   onImageRemove: () => void;
   onInsertFormula: () => void;
   isUploading: boolean;
+  onToggleCorrect: () => void;
 }
 
 const OptionInput = ({
@@ -365,16 +381,23 @@ const OptionInput = ({
   onImageRemove,
   onInsertFormula,
   isUploading,
+  onToggleCorrect,
 }: OptionInputProps) => {
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
-        <Badge 
-          variant={isCorrect ? "default" : "outline"}
-          className={isCorrect ? "bg-green-600" : ""}
+        <button
+          type="button"
+          onClick={onToggleCorrect}
+          className={`w-7 h-7 rounded-full flex items-center justify-center font-semibold text-sm transition-all ${
+            isCorrect
+              ? 'bg-green-500 text-white shadow-md'
+              : 'bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary border border-border'
+          }`}
+          title={isCorrect ? 'Click để bỏ chọn đáp án đúng' : 'Click để chọn làm đáp án đúng'}
         >
-          {letter}
-        </Badge>
+          {isCorrect ? <Check className="w-4 h-4" /> : letter}
+        </button>
         <div className="flex-1">
           <Input
             value={value}
