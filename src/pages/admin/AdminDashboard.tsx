@@ -277,192 +277,183 @@ const AdminDashboard = () => {
     { title: 'Lượt làm bài', value: stats.totalAttempts, icon: TrendingUp, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
   ];
 
+  const quickLinks = [
+    { title: 'Quản lý người dùng', icon: Users, href: '/admin/users', color: 'text-blue-500', bg: 'bg-blue-500/10' },
+    { title: 'Quản lý danh mục', icon: Layers, href: '/admin/categories', color: 'text-purple-500', bg: 'bg-purple-500/10' },
+    { title: 'Quản lý đề thi', icon: FileText, href: '/admin/exams', color: 'text-green-500', bg: 'bg-green-500/10' },
+    { title: 'Quản lý Flashcard', icon: Layers, href: '/admin/flashcards', color: 'text-orange-500', bg: 'bg-orange-500/10' },
+    { title: 'Quản lý Podcast', icon: Headphones, href: '/admin/podcasts', color: 'text-pink-500', bg: 'bg-pink-500/10' },
+  ];
+
+  const quickActions = [
+    { title: 'Tạo đề thi', desc: 'Thêm đề thi mới', icon: Plus, href: '/admin/exams/create', color: 'text-primary', bg: 'bg-primary/10' },
+    { title: 'Tạo Flashcard', desc: 'Thêm bộ thẻ ghi nhớ', icon: Layers, href: '/admin/flashcards/create', color: 'text-orange-500', bg: 'bg-orange-500/10' },
+    { title: 'Tạo Podcast', desc: 'Thêm bài nghe mới', icon: Headphones, href: '/admin/podcasts/create', color: 'text-pink-500', bg: 'bg-pink-500/10' },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-              <Shield className="w-8 h-8 text-primary" />
-              Admin Dashboard
-            </h1>
-            <p className="text-muted-foreground mt-1">Quản lý hệ thống và người dùng</p>
-          </div>
-          <div className="flex gap-3 flex-wrap">
-            <Link to="/admin/users">
-              <Button variant="outline" className="gap-2">
-                <Users className="w-4 h-4" />
-                Quản lý người dùng
-              </Button>
-            </Link>
-            <Link to="/admin/categories">
-              <Button variant="outline" className="gap-2">
-                <Layers className="w-4 h-4" />
-                Quản lý danh mục
-              </Button>
-            </Link>
-            <Link to="/admin/exams">
-              <Button variant="outline" className="gap-2">
-                <FileText className="w-4 h-4" />
-                Quản lý đề thi
-              </Button>
-            </Link>
-            <Link to="/admin/flashcards">
-              <Button variant="outline" className="gap-2">
-                <Layers className="w-4 h-4" />
-                Quản lý Flashcard
-              </Button>
-            </Link>
-            <Link to="/admin/podcasts">
-              <Button variant="outline" className="gap-2">
-                <Headphones className="w-4 h-4" />
-                Quản lý Podcast
-              </Button>
-            </Link>
-            <Button 
-              variant="outline" 
-              className="gap-2"
-              onClick={handleExportDatabase}
-              disabled={exporting}
-            >
-              <Download className="w-4 h-4" />
-              {exporting ? 'Đang xuất...' : 'Xuất Database'}
-            </Button>
+      <main className="container mx-auto px-4 py-4 md:py-8 pb-24 md:pb-8">
+        {/* Mobile Header */}
+        <div className="mb-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Shield className="w-5 h-5 md:w-6 md:h-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-xl md:text-3xl font-bold text-foreground">Admin Dashboard</h1>
+              <p className="text-sm text-muted-foreground hidden md:block">Quản lý hệ thống và người dùng</p>
+            </div>
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
+        {/* Stats Grid - Mobile Optimized */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 md:gap-4 mb-6">
           {statCards.map((stat) => (
             <Card key={stat.title} className="border-border/50">
-              <CardContent className="p-4">
-                <div className={`w-10 h-10 rounded-lg ${stat.bg} flex items-center justify-center mb-3`}>
-                  <stat.icon className={`w-5 h-5 ${stat.color}`} />
+              <CardContent className="p-3 md:p-4">
+                <div className="flex items-center gap-2 md:flex-col md:items-start">
+                  <div className={`w-8 h-8 md:w-10 md:h-10 rounded-lg ${stat.bg} flex items-center justify-center flex-shrink-0`}>
+                    <stat.icon className={`w-4 h-4 md:w-5 md:h-5 ${stat.color}`} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-lg md:text-2xl font-bold text-foreground truncate">{stat.value.toLocaleString()}</p>
+                    <p className="text-xs md:text-sm text-muted-foreground truncate">{stat.title}</p>
+                  </div>
                 </div>
-                <p className="text-2xl font-bold text-foreground">{stat.value.toLocaleString()}</p>
-                <p className="text-sm text-muted-foreground">{stat.title}</p>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid md:grid-cols-3 gap-4 mb-8">
-          <Link to="/admin/exams/create">
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow border-border/50 group">
-              <CardContent className="p-6 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                  <Plus className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">Tạo đề thi mới</h3>
-                  <p className="text-sm text-muted-foreground">Thêm đề thi và câu hỏi</p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground ml-auto" />
-              </CardContent>
-            </Card>
-          </Link>
-          
-          <Link to="/admin/flashcards/create">
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow border-border/50 group">
-              <CardContent className="p-6 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center group-hover:bg-orange-500/20 transition-colors">
-                  <Layers className="w-6 h-6 text-orange-500" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">Tạo Flashcard Set</h3>
-                  <p className="text-sm text-muted-foreground">Thêm bộ thẻ ghi nhớ</p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground ml-auto" />
-              </CardContent>
-            </Card>
-          </Link>
-          
-          <Link to="/admin/podcasts/create">
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow border-border/50 group">
-              <CardContent className="p-6 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-pink-500/10 flex items-center justify-center group-hover:bg-pink-500/20 transition-colors">
-                  <Headphones className="w-6 h-6 text-pink-500" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">Tạo Podcast</h3>
-                  <p className="text-sm text-muted-foreground">Thêm bài nghe mới</p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground ml-auto" />
-              </CardContent>
-            </Card>
-          </Link>
+        {/* Quick Links - Mobile Grid */}
+        <div className="mb-6">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">Quản lý</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 md:gap-3">
+            {quickLinks.map((link) => (
+              <Link key={link.href} to={link.href}>
+                <Card className="border-border/50 hover:border-primary/50 transition-colors h-full">
+                  <CardContent className="p-3 md:p-4 flex flex-col items-center text-center gap-2">
+                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl ${link.bg} flex items-center justify-center`}>
+                      <link.icon className={`w-5 h-5 md:w-6 md:h-6 ${link.color}`} />
+                    </div>
+                    <span className="text-xs md:text-sm font-medium text-foreground leading-tight">{link.title}</span>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
         </div>
 
-        {/* Users Table */}
+        {/* Quick Actions */}
+        <div className="mb-6">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">Tạo mới</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 md:gap-3">
+            {quickActions.map((action) => (
+              <Link key={action.href} to={action.href}>
+                <Card className="cursor-pointer hover:shadow-md transition-all border-border/50 group">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl ${action.bg} flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0`}>
+                      <action.icon className={`w-5 h-5 md:w-6 md:h-6 ${action.color}`} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-foreground text-sm md:text-base">{action.title}</h3>
+                      <p className="text-xs md:text-sm text-muted-foreground truncate">{action.desc}</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Export Button - Mobile */}
+        <div className="mb-6 md:hidden">
+          <Button 
+            variant="outline" 
+            className="w-full gap-2"
+            onClick={handleExportDatabase}
+            disabled={exporting}
+          >
+            <Download className="w-4 h-4" />
+            {exporting ? 'Đang xuất...' : 'Xuất Database'}
+          </Button>
+        </div>
+
+        {/* Users Section */}
         <Card className="border-border/50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5" />
-              Quản lý người dùng
-            </CardTitle>
-            <CardDescription>
-              Phân quyền và quản lý người dùng trong hệ thống
-            </CardDescription>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                  <Users className="w-4 h-4 md:w-5 md:h-5" />
+                  Người dùng gần đây
+                </CardTitle>
+                <CardDescription className="text-xs md:text-sm mt-1">
+                  Phân quyền và quản lý người dùng
+                </CardDescription>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="hidden md:flex gap-2"
+                onClick={handleExportDatabase}
+                disabled={exporting}
+              >
+                <Download className="w-4 h-4" />
+                {exporting ? 'Đang xuất...' : 'Xuất Database'}
+              </Button>
+            </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0 md:p-6 md:pt-0">
             {loading ? (
               <div className="flex items-center justify-center h-32">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Người dùng</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Ngày tạo</TableHead>
-                    <TableHead>Vai trò hiện tại</TableHead>
-                    <TableHead>Thay đổi vai trò</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <>
+                {/* Mobile User List */}
+                <div className="md:hidden divide-y divide-border">
                   {users.map((u) => (
-                    <TableRow key={u.id}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{u.full_name || 'Chưa đặt tên'}</p>
+                    <div key={u.id} className="p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-foreground truncate">{u.full_name || 'Chưa đặt tên'}</p>
+                          <p className="text-xs text-muted-foreground truncate">{u.email}</p>
                           {u.username && (
-                            <p className="text-sm text-muted-foreground">@{u.username}</p>
+                            <p className="text-xs text-muted-foreground">@{u.username}</p>
                           )}
                         </div>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{u.email}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {new Date(u.created_at).toLocaleDateString('vi-VN')}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1 flex-wrap">
+                        <div className="flex gap-1 flex-wrap justify-end">
                           {u.roles.length === 0 ? (
-                            <Badge variant="outline">User</Badge>
+                            <Badge variant="outline" className="text-xs">User</Badge>
                           ) : (
                             u.roles.map((role) => (
                               <Badge 
                                 key={role} 
                                 variant={role === 'admin' ? 'default' : role === 'teacher' ? 'secondary' : 'outline'}
+                                className="text-xs"
                               >
                                 {role}
                               </Badge>
                             ))
                           )}
                         </div>
-                      </TableCell>
-                      <TableCell>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(u.created_at).toLocaleDateString('vi-VN')}
+                        </span>
                         <Select 
                           value={u.roles[0] || 'none'} 
                           onValueChange={(value) => handleRoleChange(u.user_id, value)}
                           disabled={u.user_id === user?.id}
                         >
-                          <SelectTrigger className="w-32">
-                            <SelectValue />
+                          <SelectTrigger className="w-28 h-8 text-xs">
+                            <SelectValue placeholder="Chọn vai trò" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">User</SelectItem>
@@ -471,11 +462,77 @@ const AdminDashboard = () => {
                             <SelectItem value="admin">Admin</SelectItem>
                           </SelectContent>
                         </Select>
-                      </TableCell>
-                    </TableRow>
+                      </div>
+                    </div>
                   ))}
-                </TableBody>
-              </Table>
+                </div>
+
+                {/* Desktop Table */}
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Người dùng</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Ngày tạo</TableHead>
+                        <TableHead>Vai trò hiện tại</TableHead>
+                        <TableHead>Thay đổi vai trò</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {users.map((u) => (
+                        <TableRow key={u.id}>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{u.full_name || 'Chưa đặt tên'}</p>
+                              {u.username && (
+                                <p className="text-sm text-muted-foreground">@{u.username}</p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {new Date(u.created_at).toLocaleDateString('vi-VN')}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1 flex-wrap">
+                              {u.roles.length === 0 ? (
+                                <Badge variant="outline">User</Badge>
+                              ) : (
+                                u.roles.map((role) => (
+                                  <Badge 
+                                    key={role} 
+                                    variant={role === 'admin' ? 'default' : role === 'teacher' ? 'secondary' : 'outline'}
+                                  >
+                                    {role}
+                                  </Badge>
+                                ))
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Select 
+                              value={u.roles[0] || 'none'} 
+                              onValueChange={(value) => handleRoleChange(u.user_id, value)}
+                              disabled={u.user_id === user?.id}
+                            >
+                              <SelectTrigger className="w-32">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">User</SelectItem>
+                                <SelectItem value="teacher">Teacher</SelectItem>
+                                <SelectItem value="moderator">Moderator</SelectItem>
+                                <SelectItem value="admin">Admin</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
