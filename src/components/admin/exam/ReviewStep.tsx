@@ -1,7 +1,7 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   FileText, 
   Clock, 
@@ -10,7 +10,11 @@ import {
   AlertCircle,
   Edit,
   FolderOpen,
-  Check
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight
 } from 'lucide-react';
 import { type Question } from './QuestionEditor';
 
@@ -26,6 +30,8 @@ interface ReviewStepProps {
   onUpdateQuestion?: (index: number, field: keyof Question, value: string) => void;
 }
 
+const QUESTIONS_PER_PAGE = 10;
+
 export const ReviewStep = ({
   title,
   description,
@@ -37,6 +43,13 @@ export const ReviewStep = ({
   onEditQuestions,
   onUpdateQuestion,
 }: ReviewStepProps) => {
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.max(1, Math.ceil(questions.length / QUESTIONS_PER_PAGE));
+  const startIndex = (currentPage - 1) * QUESTIONS_PER_PAGE;
+  const endIndex = startIndex + QUESTIONS_PER_PAGE;
+  const currentQuestions = questions.slice(startIndex, endIndex);
+
   const getDifficultyLabel = (diff: string) => {
     switch (diff) {
       case 'easy': return { label: 'Dễ', color: 'bg-green-500' };
@@ -83,6 +96,39 @@ export const ReviewStep = ({
   const isCorrectAnswer = (question: Question, letter: string) => {
     const answers = question.correct_answer.split(',').map(a => a.trim());
     return answers.includes(letter);
+  };
+
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+  };
+
+  // Generate page numbers to show
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const maxVisible = 5;
+    
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('...');
+        pages.push(currentPage - 1);
+        pages.push(currentPage);
+        pages.push(currentPage + 1);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    return pages;
   };
 
   return (
@@ -200,9 +246,75 @@ export const ReviewStep = ({
               </p>
             </div>
           ) : (
-            <ScrollArea className="h-[500px]">
+            <div className="space-y-4">
+              {/* Pagination Top */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-muted-foreground">
+                    Trang {currentPage} / {totalPages} (Câu {startIndex + 1} - {Math.min(endIndex, questions.length)})
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => goToPage(1)}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronsLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => goToPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    
+                    {getPageNumbers().map((page, idx) => (
+                      typeof page === 'number' ? (
+                        <Button
+                          key={idx}
+                          variant={currentPage === page ? "default" : "outline"}
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => goToPage(page)}
+                        >
+                          {page}
+                        </Button>
+                      ) : (
+                        <span key={idx} className="px-2 text-muted-foreground">...</span>
+                      )
+                    ))}
+                    
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => goToPage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => goToPage(totalPages)}
+                      disabled={currentPage === totalPages}
+                    >
+                      <ChevronsRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Questions for current page */}
               <div className="space-y-4">
-                {questions.map((q, idx) => {
+                {currentQuestions.map((q, idx) => {
+                  const actualIndex = startIndex + idx;
                   const isValid = q.question_text && q.option_a && q.option_b;
                   const availableOptions = optionLabels.filter(
                     letter => q[getOptionField(letter)]
@@ -211,7 +323,7 @@ export const ReviewStep = ({
                   
                   return (
                     <div 
-                      key={idx} 
+                      key={actualIndex} 
                       className={`p-4 rounded-lg border ${
                         isValid ? 'bg-muted/30 border-border' : 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20'
                       }`}
@@ -219,7 +331,7 @@ export const ReviewStep = ({
                       {/* Question Header */}
                       <div className="flex items-start gap-3 mb-3">
                         <Badge variant={isValid ? "secondary" : "outline"} className="shrink-0 mt-0.5">
-                          {idx + 1}
+                          {actualIndex + 1}
                         </Badge>
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm">
@@ -257,7 +369,7 @@ export const ReviewStep = ({
                             >
                               <button
                                 type="button"
-                                onClick={() => toggleCorrectAnswer(idx, letter)}
+                                onClick={() => toggleCorrectAnswer(actualIndex, letter)}
                                 className={`w-7 h-7 rounded-full flex items-center justify-center font-semibold text-sm transition-all ${
                                   isCorrect
                                     ? 'bg-green-500 text-white shadow-md'
@@ -299,7 +411,66 @@ export const ReviewStep = ({
                   );
                 })}
               </div>
-            </ScrollArea>
+
+              {/* Pagination Bottom */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-1 pt-4 border-t">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => goToPage(1)}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronsLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  
+                  {getPageNumbers().map((page, idx) => (
+                    typeof page === 'number' ? (
+                      <Button
+                        key={idx}
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => goToPage(page)}
+                      >
+                        {page}
+                      </Button>
+                    ) : (
+                      <span key={idx} className="px-2 text-muted-foreground">...</span>
+                    )
+                  ))}
+                  
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => goToPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronsRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
           )}
         </CardContent>
       </Card>

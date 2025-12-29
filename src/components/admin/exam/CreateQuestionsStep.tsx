@@ -8,8 +8,11 @@ import {
   Upload, 
   Plus,
   FileText,
-  Wand2,
-  FileSpreadsheet
+  FileSpreadsheet,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight
 } from 'lucide-react';
 import { AIQuestionGenerator } from '@/components/ai/AIQuestionGenerator';
 import { ImportExportQuestions } from '@/components/admin/ImportExportQuestions';
@@ -21,12 +24,20 @@ interface CreateQuestionsStepProps {
   onImageUpload?: (file: File, questionIndex: number, field: string) => Promise<string>;
 }
 
+const QUESTIONS_PER_PAGE = 10;
+
 export const CreateQuestionsStep = ({
   questions,
   onQuestionsChange,
   onImageUpload,
 }: CreateQuestionsStepProps) => {
   const [activeTab, setActiveTab] = useState('manual');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.max(1, Math.ceil(questions.length / QUESTIONS_PER_PAGE));
+  const startIndex = (currentPage - 1) * QUESTIONS_PER_PAGE;
+  const endIndex = startIndex + QUESTIONS_PER_PAGE;
+  const currentQuestions = questions.slice(startIndex, endIndex);
 
   const addQuestion = () => {
     const newQuestion: Question = {
@@ -44,6 +55,9 @@ export const CreateQuestionsStep = ({
       question_order: questions.length + 1,
     };
     onQuestionsChange([...questions, newQuestion]);
+    // Navigate to the last page where the new question is
+    const newTotalPages = Math.ceil((questions.length + 1) / QUESTIONS_PER_PAGE);
+    setCurrentPage(newTotalPages);
   };
 
   const updateQuestion = (index: number, field: keyof Question, value: string | number) => {
@@ -54,6 +68,11 @@ export const CreateQuestionsStep = ({
 
   const removeQuestion = (index: number) => {
     onQuestionsChange(questions.filter((_, i) => i !== index));
+    // Adjust current page if needed
+    const newTotalPages = Math.max(1, Math.ceil((questions.length - 1) / QUESTIONS_PER_PAGE));
+    if (currentPage > newTotalPages) {
+      setCurrentPage(newTotalPages);
+    }
   };
 
   const handleAIQuestionsGenerated = (newQuestions: any[]) => {
@@ -73,11 +92,48 @@ export const CreateQuestionsStep = ({
     }));
     onQuestionsChange([...questions, ...mapped]);
     setActiveTab('manual');
+    // Navigate to first page of new questions
+    const newTotalPages = Math.ceil((questions.length + mapped.length) / QUESTIONS_PER_PAGE);
+    setCurrentPage(Math.ceil((questions.length + 1) / QUESTIONS_PER_PAGE));
   };
 
   const handleImport = (importedQuestions: Question[]) => {
     onQuestionsChange(importedQuestions);
     setActiveTab('manual');
+    setCurrentPage(1);
+  };
+
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+  };
+
+  // Generate page numbers to show
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const maxVisible = 5;
+    
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('...');
+        pages.push(currentPage - 1);
+        pages.push(currentPage);
+        pages.push(currentPage + 1);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    return pages;
   };
 
   return (
@@ -90,6 +146,11 @@ export const CreateQuestionsStep = ({
             <span className="font-medium">{questions.length}</span>
             <span className="text-muted-foreground">câu hỏi</span>
           </div>
+          {questions.length > 0 && (
+            <div className="text-sm text-muted-foreground">
+              Trang {currentPage} / {totalPages}
+            </div>
+          )}
         </div>
         <ImportExportQuestions 
           questions={questions} 
@@ -134,16 +195,135 @@ export const CreateQuestionsStep = ({
             </Card>
           ) : (
             <>
-              {questions.map((question, index) => (
+              {/* Pagination Top */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-1 flex-wrap">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => goToPage(1)}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronsLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  
+                  {getPageNumbers().map((page, idx) => (
+                    typeof page === 'number' ? (
+                      <Button
+                        key={idx}
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => goToPage(page)}
+                      >
+                        {page}
+                      </Button>
+                    ) : (
+                      <span key={idx} className="px-2 text-muted-foreground">...</span>
+                    )
+                  ))}
+                  
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => goToPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronsRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+
+              {/* Questions for current page */}
+              {currentQuestions.map((question, index) => (
                 <QuestionEditor
-                  key={index}
+                  key={startIndex + index}
                   question={question}
-                  index={index}
+                  index={startIndex + index}
                   onUpdate={updateQuestion}
                   onRemove={removeQuestion}
                   onImageUpload={onImageUpload}
                 />
               ))}
+
+              {/* Pagination Bottom */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-1 flex-wrap pt-4">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => goToPage(1)}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronsLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  
+                  {getPageNumbers().map((page, idx) => (
+                    typeof page === 'number' ? (
+                      <Button
+                        key={idx}
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => goToPage(page)}
+                      >
+                        {page}
+                      </Button>
+                    ) : (
+                      <span key={idx} className="px-2 text-muted-foreground">...</span>
+                    )
+                  ))}
+                  
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => goToPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronsRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
               
               <Button 
                 onClick={addQuestion} 
