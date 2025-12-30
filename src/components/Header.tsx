@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, LogOut, User, History, Settings, BookOpen, Trophy, LayoutDashboard, Shield, GraduationCap } from "lucide-react";
+import logo from "@/assets/logo.png";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -76,15 +77,10 @@ export const Header = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <div className="relative">
-              <span className="text-2xl font-extrabold tracking-tight">
-                <span className="text-foreground">The</span>
-                <span className="text-primary"> Best</span>
-              </span>
-              <span className="block text-xl font-bold text-accent -mt-1">
-                Study
-              </span>
-            </div>
+            <img src={logo} alt="AI-Exam.cloud" className="h-10 w-auto" />
+            <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              AI-Exam.cloud
+            </span>
           </Link>
 
           {/* Desktop Navigation */}

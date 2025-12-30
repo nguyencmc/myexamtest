@@ -6,6 +6,7 @@ import {
   MapPin,
   Heart
 } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 const footerLinks = {
   features: [
@@ -41,17 +42,14 @@ export const Footer = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <div className="mb-6">
-              <span className="text-2xl font-extrabold">
-                <span className="text-background">The</span>
-                <span className="text-primary"> Best</span>
-              </span>
-              <span className="block text-xl font-bold text-accent -mt-1">
-                Study
+            <div className="mb-6 flex items-center gap-2">
+              <img src={logo} alt="AI-Exam.cloud" className="h-10 w-auto" />
+              <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                AI-Exam.cloud
               </span>
             </div>
             <p className="text-background/70 mb-6 leading-relaxed">
-              Nền tảng học ngôn ngữ miễn phí với các công cụ học tập tương tác, giúp việc học trở nên thú vị và hiệu quả.
+              Nền tảng luyện thi trực tuyến thông minh với AI, giúp việc học trở nên thú vị và hiệu quả hơn.
             </p>
             <div className="flex gap-3">
               {socialLinks.map((social) => (
@@ -115,7 +113,7 @@ export const Footer = () => {
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-primary flex-shrink-0" />
-                <span className="text-background/70">support@thebeststudy.com</span>
+                <span className="text-background/70">support@ai-exam.cloud</span>
               </li>
             </ul>
           </div>
@@ -127,7 +125,7 @@ export const Footer = () => {
         <div className="container mx-auto px-4 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-background/60 text-sm">
-              © 2024 The Best Study. Tất cả quyền được bảo lưu.
+              © 2024 AI-Exam.cloud. Tất cả quyền được bảo lưu.
             </p>
             <p className="text-background/60 text-sm flex items-center gap-1">
               Được tạo với <Heart className="h-4 w-4 text-red-500 fill-red-500" /> tại Việt Nam

@@ -24,7 +24,7 @@ export const CTASection = () => {
           </h2>
           
           <p className="text-lg text-white/80 mb-8 max-w-xl mx-auto">
-            Tham gia cùng hàng nghìn học viên đang cải thiện kỹ năng ngôn ngữ mỗi ngày với The Best Study.
+            Tham gia cùng hàng nghìn học viên đang cải thiện kỹ năng mỗi ngày với AI-Exam.cloud.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
