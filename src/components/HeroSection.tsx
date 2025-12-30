@@ -10,17 +10,17 @@ export const HeroSection = () => {
           {/* Left Content */}
           <div className="max-w-xl animate-slide-up">
             <p className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">
-              Chào mừng đến với The Best Study
+              Chào mừng đến với AI-Exam.cloud
             </p>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
-              <span className="text-gradient">Hành trình</span>
+              <span className="text-gradient">Luyện thi</span>
               <br />
-              <span className="text-foreground">Chinh phục mọi</span>
+              <span className="text-foreground">Thông minh với</span>
               <br />
-              <span className="text-foreground">Thử thách!</span>
+              <span className="text-foreground">AI!</span>
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-              The Best Study – Nơi học tốt nhất! Website miễn phí cung cấp các công cụ học tập như thẻ ghi nhớ tương tác, trò chơi hấp dẫn, đánh giá kỹ năng viết, mô phỏng kỳ thi và nhiều tính năng khác.
+              AI-Exam.cloud – Nền tảng luyện thi trực tuyến thông minh! Cung cấp đề thi đa dạng, flashcard tương tác, podcast học tập và nhiều công cụ học tập hiệu quả với sự hỗ trợ của AI.
             </p>
             <div className="flex flex-wrap gap-4">
               <Button size="lg" className="shadow-button gap-2 text-base">
