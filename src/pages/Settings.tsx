@@ -19,7 +19,9 @@ import {
   Mail,
   AtSign,
   FileText,
-  Loader2
+  Loader2,
+  Upload,
+  Trash2
 } from "lucide-react";
 
 interface Profile {
@@ -39,6 +41,7 @@ const Settings = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   
   // Form state
@@ -102,6 +105,80 @@ const Settings = () => {
       toast.error("Không thể tải thông tin tài khoản");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!user || !event.target.files || event.target.files.length === 0) return;
+    
+    const file = event.target.files[0];
+    const fileExt = file.name.split('.').pop()?.toLowerCase();
+    
+    // Validate file type
+    const allowedTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    if (!fileExt || !allowedTypes.includes(fileExt)) {
+      toast.error("Chỉ chấp nhận file ảnh (jpg, png, gif, webp)");
+      return;
+    }
+    
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Kích thước ảnh tối đa là 2MB");
+      return;
+    }
+    
+    setUploading(true);
+    
+    try {
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      
+      // Delete old avatar if exists
+      if (avatarUrl && avatarUrl.includes('avatars')) {
+        const oldPath = avatarUrl.split('/avatars/')[1];
+        if (oldPath) {
+          await supabase.storage.from('avatars').remove([oldPath]);
+        }
+      }
+      
+      // Upload new avatar
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true });
+      
+      if (uploadError) throw uploadError;
+      
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+      
+      setAvatarUrl(publicUrl);
+      toast.success("Đã tải ảnh lên thành công!");
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      toast.error("Không thể tải ảnh lên");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!user || !avatarUrl) return;
+    
+    try {
+      // Delete from storage if it's our storage
+      if (avatarUrl.includes('avatars')) {
+        const oldPath = avatarUrl.split('/avatars/')[1];
+        if (oldPath) {
+          await supabase.storage.from('avatars').remove([oldPath]);
+        }
+      }
+      
+      setAvatarUrl("");
+      toast.success("Đã xóa ảnh đại diện");
+    } catch (error) {
+      console.error('Error removing avatar:', error);
+      toast.error("Không thể xóa ảnh");
     }
   };
 
@@ -205,26 +282,56 @@ const Settings = () => {
             <CardContent className="space-y-6">
               {/* Avatar Section */}
               <div className="flex items-center gap-6">
-                <Avatar className="w-24 h-24 border-4 border-muted">
-                  <AvatarImage src={avatarUrl || undefined} />
-                  <AvatarFallback className="text-2xl font-bold bg-primary text-primary-foreground">
-                    {(fullName || username || user?.email || 'U').charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 space-y-2">
-                  <Label htmlFor="avatarUrl" className="flex items-center gap-2">
+                <div className="relative">
+                  <Avatar className="w-24 h-24 border-4 border-muted">
+                    <AvatarImage src={avatarUrl || undefined} />
+                    <AvatarFallback className="text-2xl font-bold bg-primary text-primary-foreground">
+                      {(fullName || username || user?.email || 'U').charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  {uploading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-full">
+                      <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 space-y-3">
+                  <Label className="flex items-center gap-2">
                     <Camera className="w-4 h-4" />
-                    URL ảnh đại diện
+                    Ảnh đại diện
                   </Label>
-                  <Input
-                    id="avatarUrl"
-                    type="url"
-                    placeholder="https://example.com/avatar.jpg"
-                    value={avatarUrl}
-                    onChange={(e) => setAvatarUrl(e.target.value)}
+                  <div className="flex gap-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      disabled={uploading}
+                      onClick={() => document.getElementById('avatar-upload')?.click()}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Tải ảnh lên
+                    </Button>
+                    {avatarUrl && (
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={handleRemoveAvatar}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Xóa ảnh
+                      </Button>
+                    )}
+                  </div>
+                  <input
+                    id="avatar-upload"
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    className="hidden"
+                    onChange={handleAvatarUpload}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Nhập URL hình ảnh từ internet
+                    Chấp nhận JPG, PNG, GIF, WebP. Tối đa 2MB.
                   </p>
                 </div>
               </div>
