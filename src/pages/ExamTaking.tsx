@@ -70,7 +70,7 @@ const ExamTaking = () => {
   const { user } = useAuth();
   
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Record<string, string[]>>({});
   const [flaggedQuestions, setFlaggedQuestions] = useState<Set<string>>(new Set());
   const [timeLeft, setTimeLeft] = useState(0);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -136,12 +136,20 @@ const ExamTaking = () => {
     return () => clearInterval(timer);
   }, [timeLeft, isSubmitted]);
 
+  // Helper function to check if answer is correct
+  const isAnswerCorrect = (question: Question, userAnswers: string[] | undefined) => {
+    if (!userAnswers || userAnswers.length === 0) return false;
+    const correctAnswers = question.correct_answer?.split(',').map(a => a.trim()).sort() || [];
+    const sortedUserAnswers = [...userAnswers].sort();
+    return JSON.stringify(correctAnswers) === JSON.stringify(sortedUserAnswers);
+  };
+
   // Auto submit when time runs out
   useEffect(() => {
     if (isSubmitted && timeLeft === 0 && exam && questions && questions.length > 0) {
       const timeSpent = Math.floor((Date.now() - startTime) / 1000);
       const correctCount = questions.filter(
-        (q) => answers[q.id] === q.correct_answer
+        (q) => isAnswerCorrect(q, answers[q.id])
       ).length;
 
       supabase.from('exam_attempts').insert({
@@ -164,7 +172,25 @@ const ExamTaking = () => {
 
   const handleAnswerSelect = (questionId: string, answer: string) => {
     if (isSubmitted) return;
-    setAnswers((prev) => ({ ...prev, [questionId]: answer }));
+    
+    setAnswers((prev) => {
+      const currentAnswers = prev[questionId] || [];
+      const question = questions?.find(q => q.id === questionId);
+      const correctAnswers = question?.correct_answer?.split(',').map(a => a.trim()) || [];
+      const isMultiAnswer = correctAnswers.length > 1;
+      
+      if (isMultiAnswer) {
+        // Multi-select: toggle the answer
+        if (currentAnswers.includes(answer)) {
+          return { ...prev, [questionId]: currentAnswers.filter(a => a !== answer) };
+        } else {
+          return { ...prev, [questionId]: [...currentAnswers, answer].sort() };
+        }
+      } else {
+        // Single-select: replace the answer
+        return { ...prev, [questionId]: [answer] };
+      }
+    });
   };
 
   const toggleFlag = (questionId: string) => {
@@ -189,7 +215,7 @@ const ExamTaking = () => {
 
     const timeSpent = Math.floor((Date.now() - startTime) / 1000);
     const correctCount = questions.filter(
-      (q) => answers[q.id] === q.correct_answer
+      (q) => isAnswerCorrect(q, answers[q.id])
     ).length;
 
     // Save attempt to database
@@ -205,17 +231,18 @@ const ExamTaking = () => {
   }, [questions, exam, answers, startTime, user?.id]);
 
   const currentQuestion = questions?.[currentQuestionIndex];
-  const answeredCount = Object.keys(answers).length;
+  const answeredCount = Object.keys(answers).filter(id => answers[id]?.length > 0).length;
   const progress = questions ? (answeredCount / questions.length) * 100 : 0;
 
   // Calculate results
   const correctCount = questions?.filter(
-    (q) => answers[q.id] === q.correct_answer
+    (q) => isAnswerCorrect(q, answers[q.id])
   ).length || 0;
   const scorePercent = questions ? Math.round((correctCount / questions.length) * 100) : 0;
 
   const getOptionClass = (questionId: string, option: string) => {
-    const isSelected = answers[questionId] === option;
+    const userAnswers = answers[questionId] || [];
+    const isSelected = userAnswers.includes(option);
     
     if (!isSubmitted) {
       return isSelected
@@ -224,13 +251,14 @@ const ExamTaking = () => {
     }
 
     const question = questions?.find((q) => q.id === questionId);
-    const isCorrect = question?.correct_answer === option;
-    const userSelected = answers[questionId] === option;
+    const correctAnswers = question?.correct_answer?.split(',').map(a => a.trim()) || [];
+    const isCorrectOption = correctAnswers.includes(option);
+    const userSelected = userAnswers.includes(option);
 
-    if (isCorrect) {
+    if (isCorrectOption) {
       return 'border-green-500 bg-green-500/10 ring-2 ring-green-500';
     }
-    if (userSelected && !isCorrect) {
+    if (userSelected && !isCorrectOption) {
       return 'border-red-500 bg-red-500/10 ring-2 ring-red-500';
     }
     return 'border-border opacity-50';
@@ -321,8 +349,8 @@ const ExamTaking = () => {
             
             <div className="space-y-6">
               {questions.map((question, index) => {
-                const userAnswer = answers[question.id];
-                const isCorrect = userAnswer === question.correct_answer;
+                const userAnswers = answers[question.id] || [];
+                const isCorrect = isAnswerCorrect(question, userAnswers);
                 
                 return (
                   <div key={question.id} className="bg-card border border-border rounded-xl p-6">
@@ -369,7 +397,7 @@ const ExamTaking = () => {
 
                         <AIExplanation 
                           question={question} 
-                          userAnswer={userAnswer} 
+                          userAnswer={userAnswers.join(', ')} 
                         />
                       </div>
                     </div>
@@ -436,7 +464,7 @@ const ExamTaking = () => {
                     {/* Question Grid */}
                     <div className="grid grid-cols-6 gap-2 max-h-[50vh] overflow-y-auto">
                       {questions.map((q, index) => {
-                        const isAnswered = !!answers[q.id];
+                        const isAnswered = answers[q.id]?.length > 0;
                         const isCurrent = index === currentQuestionIndex;
                         const isFlagged = flaggedQuestions.has(q.id);
                         
@@ -516,35 +544,51 @@ const ExamTaking = () => {
                 Câu {currentQuestionIndex + 1}: {currentQuestion?.question_text}
               </h2>
 
-              <div className="space-y-3">
-                {['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].map((option) => {
-                  if (!currentQuestion) return null;
-                  const optionKey = `option_${option.toLowerCase()}` as keyof Question;
-                  const optionText = currentQuestion[optionKey];
-                  if (!optionText) return null;
-                  
-                  const isSelected = answers[currentQuestion.id] === option;
-                  
-                  return (
-                    <button
-                      key={option}
-                      onClick={() => handleAnswerSelect(currentQuestion.id, option)}
-                      className={`w-full text-left p-4 rounded-xl border transition-all ${
-                        isSelected
-                          ? 'border-primary bg-primary/10 ring-2 ring-primary'
-                          : 'border-border hover:border-primary/50 hover:bg-muted/50'
-                      }`}
-                    >
-                      <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full mr-3 ${
-                        isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted'
-                      }`}>
-                        {option}
-                      </span>
-                      {optionText as string}
-                    </button>
-                  );
-                })}
-              </div>
+              {currentQuestion && (() => {
+                const correctAnswers = currentQuestion.correct_answer?.split(',').map(a => a.trim()) || [];
+                const isMultiAnswer = correctAnswers.length > 1;
+                
+                return (
+                  <>
+                    {isMultiAnswer && (
+                      <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                        <p className="text-sm text-blue-500 font-medium">
+                          💡 Câu hỏi này có nhiều đáp án đúng. Chọn tất cả các đáp án bạn cho là đúng.
+                        </p>
+                      </div>
+                    )}
+                    <div className="space-y-3">
+                      {['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].map((option) => {
+                        const optionKey = `option_${option.toLowerCase()}` as keyof Question;
+                        const optionText = currentQuestion[optionKey];
+                        if (!optionText) return null;
+                        
+                        const userAnswers = answers[currentQuestion.id] || [];
+                        const isSelected = userAnswers.includes(option);
+                        
+                        return (
+                          <button
+                            key={option}
+                            onClick={() => handleAnswerSelect(currentQuestion.id, option)}
+                            className={`w-full text-left p-4 rounded-xl border transition-all ${
+                              isSelected
+                                ? 'border-primary bg-primary/10 ring-2 ring-primary'
+                                : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                            }`}
+                          >
+                            <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full mr-3 ${
+                              isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                            }`}>
+                              {option}
+                            </span>
+                            {optionText as string}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                );
+              })()}
 
               {/* Navigation */}
               <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
@@ -608,7 +652,7 @@ const ExamTaking = () => {
 
               <div className="grid grid-cols-5 gap-2">
                 {questions.map((q, index) => {
-                  const isAnswered = !!answers[q.id];
+                  const isAnswered = answers[q.id]?.length > 0;
                   const isCurrent = index === currentQuestionIndex;
                   const isFlagged = flaggedQuestions.has(q.id);
                   
