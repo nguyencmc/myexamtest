@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogOut, User, History, Settings, BookOpen, Trophy, LayoutDashboard, Shield, GraduationCap } from "lucide-react";
+import { Menu, LogOut, User, History, Settings, Trophy, LayoutDashboard, Shield, GraduationCap } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
+import { MobileMenu } from "./MobileMenu";
 
 const navLinks = [
   { name: "Luyện thi", href: "/exams" },
@@ -205,139 +206,25 @@ export const Header = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="lg:hidden p-2"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="lg:hidden p-2 rounded-xl hover:bg-muted/80 transition-colors"
+            onClick={() => setIsMenuOpen(true)}
           >
-            {isMenuOpen ? (
-              <X className="h-6 w-6 text-foreground" />
-            ) : (
-              <Menu className="h-6 w-6 text-foreground" />
-            )}
+            <Menu className="h-6 w-6 text-foreground" />
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="lg:hidden absolute top-16 left-0 right-0 bg-background border-b border-border shadow-lg animate-fade-in">
-          <nav className="container mx-auto px-4 py-4 flex flex-col gap-4">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                to={link.href}
-                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors py-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {link.name}
-              </Link>
-            ))}
-            <div className="flex flex-col gap-2 pt-4 border-t border-border">
-              {user ? (
-                <>
-                  {/* User Info */}
-                  <div className="flex items-center gap-3 px-2 py-2">
-                    <Avatar className="w-10 h-10">
-                      <AvatarImage src={profile?.avatar_url || undefined} />
-                      <AvatarFallback className="bg-primary text-primary-foreground">
-                        {displayName.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium">{displayName}</span>
-                      {profile?.level && (
-                        <Badge variant="secondary" className="w-fit text-xs">
-                          <Trophy className="w-3 h-3 mr-1" />
-                          Level {profile.level} • {profile.points?.toLocaleString() || 0} điểm
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Profile Links */}
-                  <Link 
-                    to="/dashboard" 
-                    onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center gap-2 px-2 py-2 text-sm text-muted-foreground hover:text-primary"
-                  >
-                    <LayoutDashboard className="w-4 h-4" />
-                    Dashboard
-                  </Link>
-                  {profile?.username && (
-                    <Link 
-                      to={`/@${profile.username}`} 
-                      onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center gap-2 px-2 py-2 text-sm text-muted-foreground hover:text-primary"
-                    >
-                      <User className="w-4 h-4" />
-                      Xem hồ sơ
-                    </Link>
-                  )}
-                  <Link 
-                    to="/history" 
-                    onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center gap-2 px-2 py-2 text-sm text-muted-foreground hover:text-primary"
-                  >
-                    <History className="w-4 h-4" />
-                    Lịch sử làm bài
-                  </Link>
-                  <Link 
-                    to="/settings" 
-                    onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center gap-2 px-2 py-2 text-sm text-muted-foreground hover:text-primary"
-                  >
-                    <Settings className="w-4 h-4" />
-                    Thiết lập
-                  </Link>
-                  
-                  {/* Admin/Teacher Links */}
-                  {isAdmin && (
-                    <Link 
-                      to="/admin" 
-                      onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center gap-2 px-2 py-2 text-sm text-primary font-medium"
-                    >
-                      <Shield className="w-4 h-4" />
-                      Admin Dashboard
-                    </Link>
-                  )}
-                  {isTeacher && !isAdmin && (
-                    <Link 
-                      to="/teacher" 
-                      onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center gap-2 px-2 py-2 text-sm text-primary font-medium"
-                    >
-                      <GraduationCap className="w-4 h-4" />
-                      Teacher Dashboard
-                    </Link>
-                  )}
-                  
-                  <Button 
-                    variant="ghost" 
-                    onClick={() => { handleSignOut(); setIsMenuOpen(false); }} 
-                    className="w-full justify-start text-destructive mt-2"
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Đăng xuất
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
-                    <Button variant="ghost" className="w-full justify-center">
-                      Đăng nhập
-                    </Button>
-                  </Link>
-                  <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
-                    <Button className="w-full shadow-button">
-                      Đăng ký
-                    </Button>
-                  </Link>
-                </>
-              )}
-            </div>
-          </nav>
-        </div>
-      )}
+      {/* Mobile Menu Drawer */}
+      <MobileMenu
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        user={user}
+        profile={profile}
+        displayName={displayName}
+        isAdmin={isAdmin}
+        isTeacher={isTeacher}
+        onSignOut={handleSignOut}
+      />
     </header>
   );
 };
