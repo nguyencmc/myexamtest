@@ -205,12 +205,22 @@ export const Header = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <button
-            className="lg:hidden p-2 rounded-xl hover:bg-muted/80 transition-colors"
-            onClick={() => setIsMenuOpen(true)}
-          >
-            <Menu className="h-6 w-6 text-foreground" />
-          </button>
+          <div className="lg:hidden flex items-center gap-2">
+            {user && profile && (
+              <Avatar className="w-8 h-8 ring-2 ring-primary/30">
+                <AvatarImage src={profile.avatar_url || undefined} />
+                <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground text-xs font-semibold">
+                  {displayName.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            )}
+            <button
+              className="p-2 rounded-xl hover:bg-muted/80 transition-colors"
+              onClick={() => setIsMenuOpen(true)}
+            >
+              <Menu className="h-6 w-6 text-foreground" />
+            </button>
+          </div>
         </div>
       </div>
 

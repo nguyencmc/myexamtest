@@ -136,134 +136,109 @@ export const MobileMenu = ({
                 </div>
               )}
 
-              {/* Two Column Layout for Logged In Users */}
-              {user ? (
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Left Column - Study */}
-                  <div className="space-y-2">
-                    <p className="text-[10px] font-bold text-primary uppercase tracking-wider px-1">
-                      📚 Học tập
-                    </p>
-                    <div className="bg-card rounded-xl border border-border/50 p-2 space-y-1">
-                      {studyLinks.map((link) => (
-                        <Link
-                          key={link.name}
-                          to={link.href}
-                          onClick={onClose}
-                          className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-muted/80 active:bg-muted transition-colors group"
-                        >
-                          <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                            <link.icon className="w-3.5 h-3.5 text-primary" />
-                          </div>
-                          <span className="text-xs font-medium text-foreground">{link.name}</span>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Right Column - Account */}
-                  <div className="space-y-2">
-                    <p className="text-[10px] font-bold text-accent uppercase tracking-wider px-1">
-                      👤 Tài khoản
-                    </p>
-                    <div className="bg-card rounded-xl border border-border/50 p-2 space-y-1">
-                      {accountLinks.map((link) => {
-                        if (link.needsUsername && !profile?.username) return null;
-                        return (
-                          <Link
-                            key={link.name}
-                            to={getProfileLink(link)}
-                            onClick={onClose}
-                            className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-muted/80 active:bg-muted transition-colors group"
-                          >
-                            <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
-                              <link.icon className="w-3.5 h-3.5 text-accent" />
-                            </div>
-                            <span className="text-xs font-medium text-foreground">{link.name}</span>
-                          </Link>
-                        );
-                      })}
-
-                      {/* Admin/Teacher Dashboard in Account Column */}
-                      {isAdmin && (
-                        <Link
-                          to="/admin"
-                          onClick={onClose}
-                          className="flex items-center gap-2 px-2 py-2 rounded-lg bg-primary/5 hover:bg-primary/10 active:bg-primary/15 transition-colors border border-primary/20"
-                        >
-                          <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center">
-                            <Shield className="w-3.5 h-3.5 text-primary" />
-                          </div>
-                          <span className="text-xs font-semibold text-primary">Admin</span>
-                        </Link>
-                      )}
-                      {isTeacher && !isAdmin && (
-                        <Link
-                          to="/teacher"
-                          onClick={onClose}
-                          className="flex items-center gap-2 px-2 py-2 rounded-lg bg-accent/5 hover:bg-accent/10 active:bg-accent/15 transition-colors border border-accent/20"
-                        >
-                          <div className="w-7 h-7 rounded-lg bg-accent/20 flex items-center justify-center">
-                            <GraduationCap className="w-3.5 h-3.5 text-accent" />
-                          </div>
-                          <span className="text-xs font-semibold text-accent">Teacher</span>
-                        </Link>
-                      )}
-
-                      {/* Logout */}
-                      <button
-                        onClick={() => {
-                          onSignOut();
-                          onClose();
-                        }}
-                        className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-destructive/10 active:bg-destructive/15 transition-colors w-full mt-2"
-                      >
-                        <div className="w-7 h-7 rounded-lg bg-destructive/10 flex items-center justify-center">
-                          <LogOut className="w-3.5 h-3.5 text-destructive" />
-                        </div>
-                        <span className="text-xs font-medium text-destructive">Đăng xuất</span>
-                      </button>
-                    </div>
-                  </div>
+              {/* Grid Layout - Same for both logged in and logged out */}
+              <div className="space-y-2">
+                <p className="text-[10px] font-bold text-primary uppercase tracking-wider px-1">
+                  📚 Khám phá
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {studyLinks.map((link) => (
+                    <Link
+                      key={link.name}
+                      to={link.href}
+                      onClick={onClose}
+                      className="flex flex-col items-center gap-2 p-3 rounded-xl bg-card border border-border/50 hover:bg-muted/80 active:bg-muted transition-colors group"
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                        <link.icon className="w-5 h-5 text-primary" />
+                      </div>
+                      <span className="text-xs font-medium text-foreground text-center">{link.name}</span>
+                    </Link>
+                  ))}
                 </div>
-              ) : (
-                /* Guest View - Single Column Grid */
-                <>
-                  <div className="space-y-2">
-                    <p className="text-[10px] font-bold text-primary uppercase tracking-wider px-1">
-                      📚 Khám phá
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {studyLinks.map((link) => (
+              </div>
+
+              {/* Account Section - Only for logged in users */}
+              {user && (
+                <div className="space-y-2">
+                  <p className="text-[10px] font-bold text-accent uppercase tracking-wider px-1">
+                    👤 Tài khoản
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {accountLinks.map((link) => {
+                      if (link.needsUsername && !profile?.username) return null;
+                      return (
                         <Link
                           key={link.name}
-                          to={link.href}
+                          to={getProfileLink(link)}
                           onClick={onClose}
                           className="flex flex-col items-center gap-2 p-3 rounded-xl bg-card border border-border/50 hover:bg-muted/80 active:bg-muted transition-colors group"
                         >
-                          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                            <link.icon className="w-5 h-5 text-primary" />
+                          <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
+                            <link.icon className="w-5 h-5 text-accent" />
                           </div>
                           <span className="text-xs font-medium text-foreground text-center">{link.name}</span>
                         </Link>
-                      ))}
-                    </div>
-                  </div>
+                      );
+                    })}
+                    
+                    {/* Admin/Teacher Dashboard */}
+                    {isAdmin && (
+                      <Link
+                        to="/admin"
+                        onClick={onClose}
+                        className="flex flex-col items-center gap-2 p-3 rounded-xl bg-primary/5 border border-primary/20 hover:bg-primary/10 active:bg-primary/15 transition-colors"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                          <Shield className="w-5 h-5 text-primary" />
+                        </div>
+                        <span className="text-xs font-semibold text-primary text-center">Admin</span>
+                      </Link>
+                    )}
+                    {isTeacher && !isAdmin && (
+                      <Link
+                        to="/teacher"
+                        onClick={onClose}
+                        className="flex flex-col items-center gap-2 p-3 rounded-xl bg-accent/5 border border-accent/20 hover:bg-accent/10 active:bg-accent/15 transition-colors"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
+                          <GraduationCap className="w-5 h-5 text-accent" />
+                        </div>
+                        <span className="text-xs font-semibold text-accent text-center">Teacher</span>
+                      </Link>
+                    )}
 
-                  {/* Auth Buttons */}
-                  <div className="space-y-3 pt-4">
-                    <Link to="/auth" onClick={onClose} className="block">
-                      <Button className="w-full h-11 rounded-xl shadow-lg bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity font-semibold">
-                        Đăng ký miễn phí
-                      </Button>
-                    </Link>
-                    <Link to="/auth" onClick={onClose} className="block">
-                      <Button variant="outline" className="w-full h-11 rounded-xl font-medium">
-                        Đăng nhập
-                      </Button>
-                    </Link>
+                    {/* Logout */}
+                    <button
+                      onClick={() => {
+                        onSignOut();
+                        onClose();
+                      }}
+                      className="flex flex-col items-center gap-2 p-3 rounded-xl bg-card border border-border/50 hover:bg-destructive/10 active:bg-destructive/15 transition-colors"
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
+                        <LogOut className="w-5 h-5 text-destructive" />
+                      </div>
+                      <span className="text-xs font-medium text-destructive text-center">Đăng xuất</span>
+                    </button>
                   </div>
-                </>
+                </div>
+              )}
+
+              {/* Auth Buttons - Only for guests */}
+              {!user && (
+                <div className="space-y-3 pt-4">
+                  <Link to="/auth" onClick={onClose} className="block">
+                    <Button className="w-full h-11 rounded-xl shadow-lg bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity font-semibold">
+                      Đăng ký miễn phí
+                    </Button>
+                  </Link>
+                  <Link to="/auth" onClick={onClose} className="block">
+                    <Button variant="outline" className="w-full h-11 rounded-xl font-medium">
+                      Đăng nhập
+                    </Button>
+                  </Link>
+                </div>
               )}
             </div>
           </ScrollArea>
