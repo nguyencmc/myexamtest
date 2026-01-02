@@ -21,7 +21,9 @@ import {
   Home,
   List,
   LayoutGrid,
-  Flag
+  Flag,
+  Lock,
+  LogIn
 } from 'lucide-react';
 import {
   Drawer,
@@ -94,7 +96,7 @@ const ExamTaking = () => {
   });
 
   // Fetch questions
-  const { data: questions, isLoading: questionsLoading } = useQuery({
+  const { data: allQuestions, isLoading: questionsLoading } = useQuery({
     queryKey: ['questions', exam?.id],
     queryFn: async () => {
       if (!exam?.id) return [];
@@ -110,6 +112,15 @@ const ExamTaking = () => {
     },
     enabled: !!exam?.id,
   });
+
+  // Limit questions to 5 for non-authenticated users
+  const MAX_GUEST_QUESTIONS = 5;
+  const isGuest = !user;
+  const questions = isGuest && allQuestions 
+    ? allQuestions.slice(0, MAX_GUEST_QUESTIONS) 
+    : allQuestions;
+  const totalQuestionsInExam = allQuestions?.length || 0;
+  const isLimitedAccess = isGuest && totalQuestionsInExam > MAX_GUEST_QUESTIONS;
 
   // Initialize timer
   useEffect(() => {
@@ -627,6 +638,31 @@ const ExamTaking = () => {
                   <ChevronRight className="w-4 h-4 md:ml-2" />
                 </Button>
               </div>
+
+              {/* Guest Access Limitation Banner */}
+              {isLimitedAccess && (
+                <div className="mt-6 p-4 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border border-primary/30 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                      <Lock className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-foreground mb-1">
+                        Bạn đang làm bản dùng thử
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Bạn chỉ có thể làm {MAX_GUEST_QUESTIONS} câu đầu tiên. Đăng nhập để làm toàn bộ {totalQuestionsInExam} câu hỏi của đề thi này.
+                      </p>
+                      <Link to="/auth">
+                        <Button size="sm" className="gap-2">
+                          <LogIn className="w-4 h-4" />
+                          Đăng nhập ngay
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
