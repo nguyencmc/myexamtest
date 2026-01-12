@@ -162,7 +162,22 @@ const TeacherDashboard = () => {
 
         {/* Quick Actions */}
         <h2 className="text-xl font-semibold mb-4">Tạo nội dung mới</h2>
-        <div className="grid md:grid-cols-3 gap-4 mb-8">
+        <div className="grid md:grid-cols-4 gap-4 mb-8">
+          <Link to="/admin/courses/create">
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow border-border/50 group h-full">
+              <CardContent className="p-6 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center group-hover:bg-cyan-500/20 transition-colors">
+                  <GraduationCap className="w-6 h-6 text-cyan-500" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-foreground">Tạo khóa học</h3>
+                  <p className="text-sm text-muted-foreground">Thêm khóa học mới</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              </CardContent>
+            </Card>
+          </Link>
+          
           <Link to="/admin/exams/create">
             <Card className="cursor-pointer hover:shadow-lg transition-shadow border-border/50 group h-full">
               <CardContent className="p-6 flex items-center gap-4">
@@ -211,7 +226,22 @@ const TeacherDashboard = () => {
 
         {/* Management Links */}
         <h2 className="text-xl font-semibold mb-4">Quản lý nội dung</h2>
-        <div className="grid md:grid-cols-3 gap-4 mb-8">
+        <div className="grid md:grid-cols-4 gap-4 mb-8">
+          <Link to="/admin/courses">
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow border-border/50 group h-full">
+              <CardContent className="p-6 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+                  <GraduationCap className="w-6 h-6 text-cyan-500" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-foreground">Quản lý khóa học</h3>
+                  <p className="text-sm text-muted-foreground">Khóa học của bạn</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              </CardContent>
+            </Card>
+          </Link>
+          
           <Link to="/admin/exams">
             <Card className="cursor-pointer hover:shadow-lg transition-shadow border-border/50 group h-full">
               <CardContent className="p-6 flex items-center gap-4">

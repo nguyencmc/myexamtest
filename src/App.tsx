@@ -36,6 +36,8 @@ import PodcastManagement from "./pages/admin/PodcastManagement";
 import PodcastEditor from "./pages/admin/PodcastEditor";
 import CategoryManagement from "./pages/admin/CategoryManagement";
 import UserManagement from "./pages/admin/UserManagement";
+import CourseManagement from "./pages/admin/CourseManagement";
+import CourseEditor from "./pages/admin/CourseEditor";
 import StudentDashboard from "./pages/StudentDashboard";
 import Achievements from "./pages/Achievements";
 import StudyGroups from "./pages/StudyGroups";
@@ -89,6 +91,9 @@ const App = () => (
             <Route path="/admin/podcasts" element={<PodcastManagement />} />
             <Route path="/admin/podcasts/create" element={<PodcastEditor />} />
             <Route path="/admin/podcasts/:id" element={<PodcastEditor />} />
+            <Route path="/admin/courses" element={<CourseManagement />} />
+            <Route path="/admin/courses/create" element={<CourseEditor />} />
+            <Route path="/admin/courses/:id" element={<CourseEditor />} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

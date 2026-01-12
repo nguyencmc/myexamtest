@@ -303,56 +303,227 @@ export type Database = {
           },
         ]
       }
+      course_categories: {
+        Row: {
+          course_count: number | null
+          created_at: string
+          description: string | null
+          display_order: number | null
+          icon_url: string | null
+          id: string
+          is_featured: boolean | null
+          name: string
+          slug: string
+        }
+        Insert: {
+          course_count?: number | null
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          icon_url?: string | null
+          id?: string
+          is_featured?: boolean | null
+          name: string
+          slug: string
+        }
+        Update: {
+          course_count?: number | null
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          icon_url?: string | null
+          id?: string
+          is_featured?: boolean | null
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      course_lessons: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_minutes: number | null
+          id: string
+          is_preview: boolean | null
+          lesson_order: number | null
+          section_id: string | null
+          title: string
+          video_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_preview?: boolean | null
+          lesson_order?: number | null
+          section_id?: string | null
+          title: string
+          video_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_preview?: boolean | null
+          lesson_order?: number | null
+          section_id?: string | null
+          title?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_lessons_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "course_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_sections: {
+        Row: {
+          course_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          section_order: number | null
+          title: string
+        }
+        Insert: {
+          course_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          section_order?: number | null
+          title: string
+        }
+        Update: {
+          course_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          section_order?: number | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_sections_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courses: {
         Row: {
           category: string
+          category_id: string | null
           created_at: string
           creator_id: string | null
           creator_name: string | null
           description: string | null
+          duration_hours: number | null
           id: string
           image_url: string | null
+          is_featured: boolean | null
           is_official: boolean | null
+          is_published: boolean | null
+          language: string | null
+          lesson_count: number | null
+          level: string | null
+          original_price: number | null
+          preview_video_url: string | null
+          price: number | null
+          rating: number | null
+          rating_count: number | null
+          requirements: string[] | null
+          slug: string | null
+          student_count: number | null
           subcategory: string | null
           term_count: number | null
           title: string
           topic: string | null
           updated_at: string
           view_count: number | null
+          what_you_learn: string[] | null
         }
         Insert: {
           category?: string
+          category_id?: string | null
           created_at?: string
           creator_id?: string | null
           creator_name?: string | null
           description?: string | null
+          duration_hours?: number | null
           id?: string
           image_url?: string | null
+          is_featured?: boolean | null
           is_official?: boolean | null
+          is_published?: boolean | null
+          language?: string | null
+          lesson_count?: number | null
+          level?: string | null
+          original_price?: number | null
+          preview_video_url?: string | null
+          price?: number | null
+          rating?: number | null
+          rating_count?: number | null
+          requirements?: string[] | null
+          slug?: string | null
+          student_count?: number | null
           subcategory?: string | null
           term_count?: number | null
           title: string
           topic?: string | null
           updated_at?: string
           view_count?: number | null
+          what_you_learn?: string[] | null
         }
         Update: {
           category?: string
+          category_id?: string | null
           created_at?: string
           creator_id?: string | null
           creator_name?: string | null
           description?: string | null
+          duration_hours?: number | null
           id?: string
           image_url?: string | null
+          is_featured?: boolean | null
           is_official?: boolean | null
+          is_published?: boolean | null
+          language?: string | null
+          lesson_count?: number | null
+          level?: string | null
+          original_price?: number | null
+          preview_video_url?: string | null
+          price?: number | null
+          rating?: number | null
+          rating_count?: number | null
+          requirements?: string[] | null
+          slug?: string | null
+          student_count?: number | null
           subcategory?: string | null
           term_count?: number | null
           title?: string
           topic?: string | null
           updated_at?: string
           view_count?: number | null
+          what_you_learn?: string[] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "courses_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "course_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       exam_attempts: {
         Row: {
