@@ -153,10 +153,18 @@ const CourseDetail = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [enrolling, setEnrolling] = useState(false);
 
   useEffect(() => {
     fetchCourse();
   }, [id]);
+
+  useEffect(() => {
+    if (user && id) {
+      checkEnrollment();
+    }
+  }, [user, id]);
 
   const fetchCourse = async () => {
     if (!id) return;
@@ -174,6 +182,41 @@ const CourseDetail = () => {
       setCourse(data);
     }
     setLoading(false);
+  };
+
+  const checkEnrollment = async () => {
+    if (!user || !id) return;
+    
+    const { data, error } = await supabase
+      .from("user_course_enrollments")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("course_id", id)
+      .maybeSingle();
+
+    if (!error && data) {
+      setIsEnrolled(true);
+    }
+  };
+
+  const handleEnroll = async () => {
+    if (!user || !id) return;
+    
+    setEnrolling(true);
+    const { error } = await supabase
+      .from("user_course_enrollments")
+      .insert({
+        user_id: user.id,
+        course_id: id,
+        progress_percentage: 0,
+      });
+
+    if (error) {
+      console.error("Error enrolling:", error);
+    } else {
+      setIsEnrolled(true);
+    }
+    setEnrolling(false);
   };
 
   // Generate random data for demo
@@ -343,8 +386,28 @@ const CourseDetail = () => {
                   <span className="text-lg text-muted-foreground line-through">{originalPrice.toLocaleString()}₫</span>
                   <Badge variant="destructive">{discount}% giảm</Badge>
                 </div>
-                <Button className="w-full h-12 text-lg mb-3">Mua ngay</Button>
-                <Button variant="outline" className="w-full h-12 mb-4">Thêm vào giỏ hàng</Button>
+                {isEnrolled ? (
+                  <Link to={`/course/${course.id}/learn`}>
+                    <Button className="w-full h-12 text-lg mb-3">
+                      <Play className="w-5 h-5 mr-2" />
+                      Tiếp tục học
+                    </Button>
+                  </Link>
+                ) : user ? (
+                  <Button 
+                    className="w-full h-12 text-lg mb-3" 
+                    onClick={handleEnroll}
+                    disabled={enrolling}
+                  >
+                    {enrolling ? "Đang đăng ký..." : "Đăng ký học miễn phí"}
+                  </Button>
+                ) : (
+                  <Link to="/auth">
+                    <Button className="w-full h-12 text-lg mb-3">
+                      Đăng nhập để đăng ký
+                    </Button>
+                  </Link>
+                )}
                 <p className="text-center text-sm text-muted-foreground">
                   Đảm bảo hoàn tiền trong 30 ngày
                 </p>
@@ -639,14 +702,33 @@ const CourseDetail = () => {
                     Ưu đãi kết thúc sau 2 ngày!
                   </p>
 
-                  <Link to={`/course/${course.id}/learn`}>
-                    <Button className="w-full h-12 text-lg mb-3">
-                      Bắt đầu học
+                  {isEnrolled ? (
+                    <Link to={`/course/${course.id}/learn`}>
+                      <Button className="w-full h-12 text-lg mb-3">
+                        <Play className="w-5 h-5 mr-2" />
+                        Tiếp tục học
+                      </Button>
+                    </Link>
+                  ) : user ? (
+                    <Button 
+                      className="w-full h-12 text-lg mb-3" 
+                      onClick={handleEnroll}
+                      disabled={enrolling}
+                    >
+                      {enrolling ? "Đang đăng ký..." : "Đăng ký học miễn phí"}
                     </Button>
-                  </Link>
-                  <Button variant="outline" className="w-full h-12 mb-4">
-                    Thêm vào giỏ hàng
-                  </Button>
+                  ) : (
+                    <Link to="/auth">
+                      <Button className="w-full h-12 text-lg mb-3">
+                        Đăng nhập để đăng ký
+                      </Button>
+                    </Link>
+                  )}
+                  {!isEnrolled && (
+                    <Button variant="outline" className="w-full h-12 mb-4">
+                      Thêm vào giỏ hàng
+                    </Button>
+                  )}
 
                   <p className="text-center text-sm text-muted-foreground mb-6">
                     Đảm bảo hoàn tiền trong 30 ngày
