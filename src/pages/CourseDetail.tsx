@@ -639,9 +639,11 @@ const CourseDetail = () => {
                     Ưu đãi kết thúc sau 2 ngày!
                   </p>
 
-                  <Button className="w-full h-12 text-lg mb-3">
-                    Mua ngay
-                  </Button>
+                  <Link to={`/course/${course.id}/learn`}>
+                    <Button className="w-full h-12 text-lg mb-3">
+                      Bắt đầu học
+                    </Button>
+                  </Link>
                   <Button variant="outline" className="w-full h-12 mb-4">
                     Thêm vào giỏ hàng
                   </Button>
