@@ -28,7 +28,9 @@ import {
   ChevronRight,
   Flame,
   Star,
-  BarChart3
+  BarChart3,
+  GraduationCap,
+  Play
 } from 'lucide-react';
 
 interface Stats {
@@ -59,6 +61,20 @@ interface WeeklyProgress {
   correct: number;
 }
 
+interface EnrolledCourse {
+  id: string;
+  course_id: string;
+  enrolled_at: string;
+  progress_percentage: number;
+  course?: {
+    id: string;
+    title: string;
+    slug: string;
+    image_url: string | null;
+    creator_name: string | null;
+  };
+}
+
 const StudentDashboard = () => {
   const { user } = useAuth();
   const { isAdmin, isTeacher } = useUserRole();
@@ -74,6 +90,7 @@ const StudentDashboard = () => {
   });
   const [recentAttempts, setRecentAttempts] = useState<RecentAttempt[]>([]);
   const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgress[]>([]);
+  const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const [streak, setStreak] = useState(0);
 
@@ -192,6 +209,29 @@ const StudentDashboard = () => {
       }
     }
     setStreak(currentStreak);
+
+    // Fetch enrolled courses
+    const { data: enrollments } = await supabase
+      .from('user_course_enrollments')
+      .select('*')
+      .eq('user_id', user?.id)
+      .order('enrolled_at', { ascending: false })
+      .limit(6);
+
+    if (enrollments && enrollments.length > 0) {
+      const courseIds = enrollments.map(e => e.course_id);
+      const { data: courses } = await supabase
+        .from('courses')
+        .select('id, title, slug, image_url, creator_name')
+        .in('id', courseIds);
+
+      const enrollmentsWithCourses = enrollments.map(enrollment => ({
+        ...enrollment,
+        course: courses?.find(c => c.id === enrollment.course_id),
+      }));
+
+      setEnrolledCourses(enrollmentsWithCourses);
+    }
 
     setLoading(false);
   };
@@ -323,6 +363,86 @@ const StudentDashboard = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* My Courses Section */}
+        <Card className="border-border/50 mb-8">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <GraduationCap className="w-5 h-5" />
+                Khóa học của tôi
+              </CardTitle>
+              <Link to="/courses">
+                <Button variant="ghost" size="sm" className="gap-1">
+                  Xem tất cả
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
+            <CardDescription>Các khóa học bạn đã đăng ký</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {enrolledCourses.length === 0 ? (
+              <div className="text-center py-8">
+                <BookOpen className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+                <p className="text-muted-foreground">Bạn chưa đăng ký khóa học nào</p>
+                <Link to="/courses">
+                  <Button className="mt-4" variant="outline">
+                    Khám phá khóa học
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {enrolledCourses.map((enrollment) => (
+                  <Link 
+                    key={enrollment.id} 
+                    to={`/course/${enrollment.course_id}/learn`}
+                    className="group"
+                  >
+                    <Card className="overflow-hidden hover:shadow-lg transition-shadow border-border/50 h-full">
+                      <div className="aspect-video relative overflow-hidden bg-muted">
+                        {enrollment.course?.image_url ? (
+                          <img 
+                            src={enrollment.course.image_url} 
+                            alt={enrollment.course.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <BookOpen className="w-12 h-12 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
+                            <Play className="w-6 h-6 text-primary fill-primary" />
+                          </div>
+                        </div>
+                      </div>
+                      <CardContent className="p-4">
+                        <h4 className="font-semibold text-foreground line-clamp-2 mb-2 group-hover:text-primary transition-colors">
+                          {enrollment.course?.title || 'Khóa học'}
+                        </h4>
+                        {enrollment.course?.creator_name && (
+                          <p className="text-sm text-muted-foreground mb-3">
+                            {enrollment.course.creator_name}
+                          </p>
+                        )}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Tiến độ</span>
+                            <span className="font-medium">{enrollment.progress_percentage || 0}%</span>
+                          </div>
+                          <Progress value={enrollment.progress_percentage || 0} className="h-2" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Smart Recommendations */}
         <div className="mb-8">
