@@ -183,6 +183,7 @@ const CourseViewer = () => {
     }
 
     try {
+      // Mark lesson as complete
       const { error } = await supabase
         .from('user_course_progress')
         .upsert({
@@ -197,15 +198,36 @@ const CourseViewer = () => {
 
       if (error) throw error;
 
-      setProgress(prev => {
-        const newProgress = new Map(prev);
-        newProgress.set(lessonId, {
-          lesson_id: lessonId,
-          is_completed: true,
-          watch_time_seconds: prev.get(lessonId)?.watch_time_seconds || 0
-        });
-        return newProgress;
+      // Update local progress state
+      const newProgress = new Map(progress);
+      newProgress.set(lessonId, {
+        lesson_id: lessonId,
+        is_completed: true,
+        watch_time_seconds: progress.get(lessonId)?.watch_time_seconds || 0
       });
+      setProgress(newProgress);
+
+      // Calculate new progress percentage
+      const totalLessons = getTotalLessons();
+      let completedCount = 0;
+      newProgress.forEach(p => {
+        if (p.is_completed) completedCount++;
+      });
+      const progressPercentage = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+
+      // Update enrollment progress
+      const { error: enrollmentError } = await supabase
+        .from('user_course_enrollments')
+        .update({ 
+          progress_percentage: progressPercentage,
+          completed_at: progressPercentage === 100 ? new Date().toISOString() : null
+        })
+        .eq('user_id', user.id)
+        .eq('course_id', id);
+
+      if (enrollmentError) {
+        console.error('Error updating enrollment progress:', enrollmentError);
+      }
 
       toast.success('Đã hoàn thành bài học');
     } catch (error) {
