@@ -8,6 +8,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { 
   Play, 
   Pause, 
@@ -23,7 +26,12 @@ import {
   Settings,
   FileText,
   MessageSquare,
-  BookOpen
+  BookOpen,
+  Download,
+  File,
+  ClipboardList,
+  Video,
+  AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -33,6 +41,14 @@ interface Course {
   description: string | null;
   creator_name: string | null;
   image_url: string | null;
+}
+
+interface LessonAttachment {
+  id: string;
+  file_name: string;
+  file_url: string;
+  file_type: string;
+  file_size: number;
 }
 
 interface Section {
@@ -50,6 +66,30 @@ interface Lesson {
   video_url: string | null;
   lesson_order: number | null;
   is_preview: boolean | null;
+  content_type: string | null;
+  attachments?: LessonAttachment[];
+}
+
+interface CourseTest {
+  id: string;
+  title: string;
+  description: string | null;
+  duration_minutes: number;
+  pass_percentage: number;
+  max_attempts: number;
+  is_required: boolean;
+}
+
+interface TestQuestion {
+  id: string;
+  question_text: string;
+  option_a: string;
+  option_b: string;
+  option_c: string | null;
+  option_d: string | null;
+  correct_answer: string;
+  explanation: string | null;
+  question_order: number;
 }
 
 interface LessonProgress {
@@ -101,7 +141,7 @@ const CourseViewer = () => {
 
       if (sectionsError) throw sectionsError;
 
-      // Fetch lessons for each section
+      // Fetch lessons for each section with attachments
       const sectionsWithLessons = await Promise.all(
         (sectionsData || []).map(async (section) => {
           const { data: lessonsData } = await supabase
@@ -110,9 +150,25 @@ const CourseViewer = () => {
             .eq('section_id', section.id)
             .order('lesson_order');
           
+          // Fetch attachments for lessons
+          const lessonsWithAttachments = await Promise.all(
+            (lessonsData || []).map(async (lesson) => {
+              const { data: attachments } = await supabase
+                .from('lesson_attachments')
+                .select('*')
+                .eq('lesson_id', lesson.id)
+                .order('display_order');
+              
+              return {
+                ...lesson,
+                attachments: attachments || []
+              };
+            })
+          );
+          
           return {
             ...section,
-            lessons: lessonsData || []
+            lessons: lessonsWithAttachments
           };
         })
       );
@@ -505,6 +561,38 @@ const CourseViewer = () => {
                     <p className="text-muted-foreground">{currentLesson.description}</p>
                   )}
                 </div>
+                
+                {/* Attachments */}
+                {currentLesson?.attachments && currentLesson.attachments.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <File className="w-4 h-4" />
+                        Tài liệu đính kèm
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {currentLesson.attachments.map((attachment) => (
+                        <a
+                          key={attachment.id}
+                          href={attachment.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted transition-colors"
+                        >
+                          <FileText className="w-5 h-5 text-primary" />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{attachment.file_name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {(attachment.file_size / 1024 / 1024).toFixed(2)} MB
+                            </p>
+                          </div>
+                          <Download className="w-4 h-4 text-muted-foreground" />
+                        </a>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
                 
                 <div className="bg-muted/50 rounded-lg p-4">
                   <h3 className="font-semibold mb-2">Về khóa học này</h3>

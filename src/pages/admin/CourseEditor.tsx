@@ -16,11 +16,7 @@ import {
   Plus, 
   Trash2, 
   GripVertical, 
-  Video,
-  ChevronDown,
-  ChevronUp,
-  Eye,
-  Upload
+  Video
 } from 'lucide-react';
 import {
   Select,
@@ -37,6 +33,8 @@ import {
 } from "@/components/ui/accordion";
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
+import { LessonEditor, CourseLesson, LessonAttachment } from '@/components/admin/course/LessonEditor';
+import { CourseTestEditor } from '@/components/admin/course/CourseTestEditor';
 
 interface CourseCategory {
   id: string;
@@ -50,16 +48,6 @@ interface CourseSection {
   description: string;
   section_order: number;
   lessons: CourseLesson[];
-}
-
-interface CourseLesson {
-  id?: string;
-  title: string;
-  description: string;
-  video_url: string;
-  duration_minutes: number;
-  lesson_order: number;
-  is_preview: boolean;
 }
 
 interface CourseFormData {
@@ -206,9 +194,26 @@ const CourseEditor = () => {
             .eq('section_id', section.id)
             .order('lesson_order');
           
+          // Fetch attachments for each lesson
+          const lessonsWithAttachments = await Promise.all(
+            (lessons || []).map(async (lesson) => {
+              const { data: attachments } = await supabase
+                .from('lesson_attachments')
+                .select('*')
+                .eq('lesson_id', lesson.id)
+                .order('display_order');
+              
+              return {
+                ...lesson,
+                content_type: (lesson.content_type || 'video') as 'video' | 'document' | 'test',
+                attachments: attachments || [],
+              };
+            })
+          );
+
           return {
             ...section,
-            lessons: lessons || [],
+            lessons: lessonsWithAttachments,
           };
         })
       );
@@ -270,6 +275,7 @@ const CourseEditor = () => {
         duration_minutes: 0,
         lesson_order: updated[sectionIndex].lessons.length,
         is_preview: false,
+        content_type: 'video',
       });
       return updated;
     });
@@ -421,21 +427,45 @@ const CourseEditor = () => {
         if (sectionError) throw sectionError;
 
         if (section.lessons.length > 0) {
-          const lessonsData = section.lessons.map((lesson, j) => ({
-            section_id: newSection.id,
-            title: lesson.title,
-            description: lesson.description,
-            video_url: lesson.video_url,
-            duration_minutes: lesson.duration_minutes,
-            lesson_order: j,
-            is_preview: lesson.is_preview,
-          }));
+          for (let j = 0; j < section.lessons.length; j++) {
+            const lesson = section.lessons[j];
+            const lessonData = {
+              section_id: newSection.id,
+              title: lesson.title,
+              description: lesson.description,
+              video_url: lesson.video_url,
+              duration_minutes: lesson.duration_minutes,
+              lesson_order: j,
+              is_preview: lesson.is_preview,
+              content_type: lesson.content_type || 'video',
+            };
 
-          const { error: lessonsError } = await supabase
-            .from('course_lessons')
-            .insert(lessonsData);
+            const { data: newLesson, error: lessonError } = await supabase
+              .from('course_lessons')
+              .insert(lessonData)
+              .select()
+              .single();
 
-          if (lessonsError) throw lessonsError;
+            if (lessonError) throw lessonError;
+
+            // Save attachments if any
+            if (lesson.attachments && lesson.attachments.length > 0) {
+              const attachmentsData = lesson.attachments.map((att, k) => ({
+                lesson_id: newLesson.id,
+                file_name: att.file_name,
+                file_url: att.file_url,
+                file_type: att.file_type,
+                file_size: att.file_size,
+                display_order: k,
+              }));
+
+              const { error: attachmentsError } = await supabase
+                .from('lesson_attachments')
+                .insert(attachmentsData);
+
+              if (attachmentsError) throw attachmentsError;
+            }
+          }
         }
       }
 
@@ -759,48 +789,22 @@ const CourseEditor = () => {
                             ) : (
                               <div className="space-y-3">
                                 {section.lessons.map((lesson, lessonIndex) => (
-                                  <div key={lessonIndex} className="bg-muted/50 rounded-lg p-3 space-y-3">
-                                    <div className="flex items-start gap-3">
-                                      <GripVertical className="w-4 h-4 text-muted-foreground mt-2" />
-                                      <div className="flex-1 space-y-3">
-                                        <Input
-                                          value={lesson.title}
-                                          onChange={(e) => updateLesson(sectionIndex, lessonIndex, { title: e.target.value })}
-                                          placeholder="Tên bài học"
+                                  <div key={lessonIndex}>
+                                    <LessonEditor
+                                      lesson={lesson}
+                                      sectionIndex={sectionIndex}
+                                      lessonIndex={lessonIndex}
+                                      onUpdate={(data) => updateLesson(sectionIndex, lessonIndex, data)}
+                                      onRemove={() => removeLesson(sectionIndex, lessonIndex)}
+                                    />
+                                    {lesson.content_type === 'test' && lesson.id && (
+                                      <div className="mt-2 ml-10">
+                                        <CourseTestEditor 
+                                          lessonId={lesson.id} 
+                                          lessonTitle={lesson.title} 
                                         />
-                                        <div className="grid sm:grid-cols-2 gap-3">
-                                          <Input
-                                            value={lesson.video_url}
-                                            onChange={(e) => updateLesson(sectionIndex, lessonIndex, { video_url: e.target.value })}
-                                            placeholder="URL video"
-                                          />
-                                          <div className="flex items-center gap-2">
-                                            <Input
-                                              type="number"
-                                              value={lesson.duration_minutes}
-                                              onChange={(e) => updateLesson(sectionIndex, lessonIndex, { duration_minutes: parseInt(e.target.value) || 0 })}
-                                              placeholder="Thời lượng (phút)"
-                                              className="flex-1"
-                                            />
-                                            <div className="flex items-center gap-2">
-                                              <Switch
-                                                checked={lesson.is_preview}
-                                                onCheckedChange={(checked) => updateLesson(sectionIndex, lessonIndex, { is_preview: checked })}
-                                              />
-                                              <Eye className="w-4 h-4 text-muted-foreground" />
-                                            </div>
-                                          </div>
-                                        </div>
                                       </div>
-                                      <Button 
-                                        variant="ghost" 
-                                        size="icon"
-                                        className="text-destructive"
-                                        onClick={() => removeLesson(sectionIndex, lessonIndex)}
-                                      >
-                                        <Trash2 className="w-4 h-4" />
-                                      </Button>
-                                    </div>
+                                    )}
                                   </div>
                                 ))}
                               </div>
