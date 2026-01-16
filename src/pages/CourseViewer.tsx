@@ -9,8 +9,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
+import { CourseTestTaking } from '@/components/course/CourseTestTaking';
 import { 
   Play, 
   Pause, 
@@ -537,12 +536,18 @@ const CourseViewer = () => {
 
         {/* Tabs Content */}
         <div className="flex-1 p-4 lg:p-6">
-          <Tabs defaultValue="overview" className="w-full">
+          <Tabs defaultValue={currentLesson?.content_type === 'test' ? 'test' : 'overview'} className="w-full">
             <TabsList className="mb-4">
               <TabsTrigger value="overview" className="flex items-center gap-2">
                 <BookOpen className="h-4 w-4" />
                 Tổng quan
               </TabsTrigger>
+              {currentLesson?.content_type === 'test' && (
+                <TabsTrigger value="test" className="flex items-center gap-2">
+                  <ClipboardList className="h-4 w-4" />
+                  Bài kiểm tra
+                </TabsTrigger>
+              )}
               <TabsTrigger value="notes" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 Ghi chú
@@ -605,6 +610,15 @@ const CourseViewer = () => {
                 </div>
               </div>
             </TabsContent>
+
+            {currentLesson?.content_type === 'test' && (
+              <TabsContent value="test">
+                <CourseTestTaking 
+                  lessonId={currentLesson.id}
+                  onComplete={() => markLessonComplete(currentLesson.id)}
+                />
+              </TabsContent>
+            )}
             
             <TabsContent value="notes">
               <div className="bg-muted/50 rounded-lg p-4 text-center">
@@ -683,11 +697,22 @@ const CourseViewer = () => {
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className={`text-sm truncate ${isCurrent ? 'font-medium' : ''}`}>
-                                {lessonIndex + 1}. {lesson.title}
-                              </p>
+                              <div className="flex items-center gap-1.5">
+                                <p className={`text-sm truncate ${isCurrent ? 'font-medium' : ''}`}>
+                                  {lessonIndex + 1}. {lesson.title}
+                                </p>
+                                {lesson.content_type === 'test' && (
+                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                    Test
+                                  </Badge>
+                                )}
+                              </div>
                               <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                                <Play className="h-3 w-3" />
+                                {lesson.content_type === 'test' ? (
+                                  <ClipboardList className="h-3 w-3" />
+                                ) : (
+                                  <Play className="h-3 w-3" />
+                                )}
                                 <span>{lesson.duration_minutes || 0} phút</span>
                               </div>
                             </div>
