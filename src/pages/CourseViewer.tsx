@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CourseTestTaking } from '@/components/course/CourseTestTaking';
+import { LessonNotes } from '@/components/course/LessonNotes';
 import { 
   Play, 
   Pause, 
@@ -621,10 +622,13 @@ const CourseViewer = () => {
             )}
             
             <TabsContent value="notes">
-              <div className="bg-muted/50 rounded-lg p-4 text-center">
-                <FileText className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-muted-foreground">Tính năng ghi chú sẽ sớm được cập nhật</p>
-              </div>
+              {currentLesson && (
+                <LessonNotes 
+                  lessonId={currentLesson.id}
+                  lessonTitle={currentLesson.title}
+                  courseId={id || ''}
+                />
+              )}
             </TabsContent>
             
             <TabsContent value="qa">
