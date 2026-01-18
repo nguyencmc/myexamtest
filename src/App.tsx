@@ -43,6 +43,7 @@ import StudentDashboard from "./pages/StudentDashboard";
 import Achievements from "./pages/Achievements";
 import StudyGroups from "./pages/StudyGroups";
 import StudyGroupDetail from "./pages/StudyGroupDetail";
+import VerifyCertificate from "./pages/VerifyCertificate";
 
 const queryClient = new QueryClient();
 
@@ -78,6 +79,7 @@ const App = () => (
             <Route path="/study-groups" element={<StudyGroups />} />
             <Route path="/study-groups/:groupId" element={<StudyGroupDetail />} />
             <Route path="/@:username" element={<UserProfile />} />
+            <Route path="/verify-certificate/:certificateNumber" element={<VerifyCertificate />} />
             
             {/* Admin & Teacher routes */}
             <Route path="/admin" element={<AdminDashboard />} />
