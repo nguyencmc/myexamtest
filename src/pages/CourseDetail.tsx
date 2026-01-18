@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { CourseReviews } from "@/components/course/CourseReviews";
 import {
   Play,
   PlayCircle,
@@ -97,10 +98,10 @@ const CourseDetail = () => {
   const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [showAllReviews, setShowAllReviews] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
+  const [liveRating, setLiveRating] = useState<{ avg: number; count: number } | null>(null);
 
   useEffect(() => {
     fetchCourse();
@@ -194,15 +195,19 @@ const CourseDetail = () => {
     setEnrolling(false);
   };
 
-  // Calculate stats from real data
-  const rating = course?.rating || 0;
-  const totalRatings = course?.rating_count || 0;
+  // Calculate stats from real data (use live rating if available from reviews)
+  const rating = liveRating?.avg ?? course?.rating ?? 0;
+  const totalRatings = liveRating?.count ?? course?.rating_count ?? 0;
   const totalStudents = course?.student_count || 0;
   const price = course?.price || 0;
   const originalPrice = course?.original_price || 0;
   const discount = originalPrice > 0 ? Math.round((1 - price / originalPrice) * 100) : 0;
   const totalHours = course?.duration_hours || 0;
   const totalLessons = sections.reduce((acc, s) => acc + s.lessons.length, 0);
+
+  const handleRatingUpdate = (avgRating: number, count: number) => {
+    setLiveRating({ avg: avgRating, count });
+  };
 
   // Default requirements if not set
   const requirements = course?.requirements?.length ? course.requirements : [
@@ -575,32 +580,12 @@ const CourseDetail = () => {
               </div>
             </div>
 
-            {/* Reviews Section - Placeholder for future implementation */}
-            {totalRatings > 0 && (
-              <div>
-                <h2 className="text-xl font-bold mb-4">Đánh giá của học viên</h2>
-                
-                {/* Rating Summary */}
-                <div className="flex flex-col md:flex-row gap-8 mb-6 p-6 bg-card border rounded-xl">
-                  <div className="text-center">
-                    <div className="text-5xl font-bold text-yellow-500 mb-1">{rating.toFixed(1)}</div>
-                    <div className="flex justify-center mb-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`w-5 h-5 ${i < Math.floor(rating) ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`}
-                        />
-                      ))}
-                    </div>
-                    <div className="text-sm text-muted-foreground">{totalRatings} đánh giá</div>
-                  </div>
-                </div>
-
-                <p className="text-center text-muted-foreground py-8">
-                  Tính năng đánh giá chi tiết sẽ sớm được cập nhật
-                </p>
-              </div>
-            )}
+            {/* Reviews Section */}
+            <CourseReviews 
+              courseId={course.id} 
+              isEnrolled={isEnrolled}
+              onRatingUpdate={handleRatingUpdate}
+            />
           </div>
 
           {/* Right Sidebar - Sticky Card */}
