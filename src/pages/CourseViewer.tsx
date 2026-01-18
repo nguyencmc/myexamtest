@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CourseTestTaking } from '@/components/course/CourseTestTaking';
 import { LessonNotes } from '@/components/course/LessonNotes';
+import { CourseCertificate } from '@/components/course/CourseCertificate';
 import { 
   Play, 
   Pause, 
@@ -663,6 +664,16 @@ const CourseViewer = () => {
               <span>{getProgressPercentage()}% hoàn thành</span>
             </div>
             <Progress value={getProgressPercentage()} className="mt-2 h-1" />
+
+            {/* Certificate Section */}
+            <div className="mt-4 pt-4 border-t">
+              <CourseCertificate
+                courseId={id || ''}
+                courseTitle={course.title}
+                creatorName={course.creator_name}
+                progressPercentage={getProgressPercentage()}
+              />
+            </div>
           </div>
 
           {/* Course Sections */}

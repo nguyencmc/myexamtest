@@ -339,6 +339,47 @@ export type Database = {
         }
         Relationships: []
       }
+      course_certificates: {
+        Row: {
+          certificate_number: string
+          completion_date: string
+          course_id: string | null
+          created_at: string
+          final_score: number | null
+          id: string
+          issued_at: string
+          user_id: string
+        }
+        Insert: {
+          certificate_number: string
+          completion_date?: string
+          course_id?: string | null
+          created_at?: string
+          final_score?: number | null
+          id?: string
+          issued_at?: string
+          user_id: string
+        }
+        Update: {
+          certificate_number?: string
+          completion_date?: string
+          course_id?: string | null
+          created_at?: string
+          final_score?: number | null
+          id?: string
+          issued_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_certificates_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       course_lessons: {
         Row: {
           content_type: string | null
@@ -1626,6 +1667,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_certificate_number: { Args: never; Returns: string }
       get_leaderboard: {
         Args: { limit_count?: number }
         Returns: {
