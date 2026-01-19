@@ -36,6 +36,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useWishlist } from "@/hooks/useWishlist";
+import { WishlistButton } from "@/components/course/WishlistButton";
 
 interface Course {
   id: string;
@@ -77,6 +79,7 @@ const Courses = () => {
   const [sortBy, setSortBy] = useState("popular");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const { user } = useAuth();
+  const { isInWishlist, toggleWishlist } = useWishlist();
 
   useEffect(() => {
     fetchCourses();
@@ -318,9 +321,13 @@ const Courses = () => {
                         </Badge>
                       )}
                     </div>
-                    <button className="absolute top-2 right-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Heart className="w-4 h-4 text-gray-600 hover:text-red-500 transition-colors" />
-                    </button>
+                    <div className="absolute top-2 right-2">
+                      <WishlistButton
+                        isInWishlist={isInWishlist(course.id)}
+                        onToggle={() => toggleWishlist(course.id)}
+                        size="sm"
+                      />
+                    </div>
                   </div>
 
                   {/* Course Info */}

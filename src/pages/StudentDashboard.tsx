@@ -13,6 +13,8 @@ import { SmartRecommendations } from '@/components/ai/SmartRecommendations';
 import { AITutorButton } from '@/components/ai/AITutorButton';
 import { AchievementsBadgeDisplay } from '@/components/achievements/AchievementsBadgeDisplay';
 import { useAchievements } from '@/hooks/useAchievements';
+import { WishlistButton } from '@/components/course/WishlistButton';
+import { useWishlist } from '@/hooks/useWishlist';
 import { 
   BookOpen, 
   FileText, 
@@ -30,7 +32,10 @@ import {
   Star,
   BarChart3,
   GraduationCap,
-  Play
+  Play,
+  Heart,
+  Users,
+  PlayCircle
 } from 'lucide-react';
 
 interface Stats {
@@ -75,6 +80,21 @@ interface EnrolledCourse {
   };
 }
 
+interface WishlistCourse {
+  id: string;
+  course_id: string;
+  created_at: string;
+  course?: {
+    id: string;
+    title: string;
+    slug: string;
+    image_url: string | null;
+    creator_name: string | null;
+    rating: number | null;
+    student_count: number | null;
+  };
+}
+
 const StudentDashboard = () => {
   const { user } = useAuth();
   const { isAdmin, isTeacher } = useUserRole();
@@ -91,8 +111,10 @@ const StudentDashboard = () => {
   const [recentAttempts, setRecentAttempts] = useState<RecentAttempt[]>([]);
   const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgress[]>([]);
   const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
+  const [wishlistCourses, setWishlistCourses] = useState<WishlistCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const [streak, setStreak] = useState(0);
+  const { isInWishlist, toggleWishlist, refetch: refetchWishlist } = useWishlist();
 
   useEffect(() => {
     if (user) {
@@ -231,6 +253,29 @@ const StudentDashboard = () => {
       }));
 
       setEnrolledCourses(enrollmentsWithCourses);
+    }
+
+    // Fetch wishlist courses
+    const { data: wishlist } = await supabase
+      .from('course_wishlists')
+      .select('*')
+      .eq('user_id', user?.id)
+      .order('created_at', { ascending: false })
+      .limit(6);
+
+    if (wishlist && wishlist.length > 0) {
+      const wishlistCourseIds = wishlist.map(w => w.course_id).filter(Boolean) as string[];
+      const { data: wishlistCoursesData } = await supabase
+        .from('courses')
+        .select('id, title, slug, image_url, creator_name, rating, student_count')
+        .in('id', wishlistCourseIds);
+
+      const wishlistWithCourses = wishlist.map(item => ({
+        ...item,
+        course: wishlistCoursesData?.find(c => c.id === item.course_id),
+      }));
+
+      setWishlistCourses(wishlistWithCourses);
     }
 
     setLoading(false);
@@ -438,6 +483,100 @@ const StudentDashboard = () => {
                       </CardContent>
                     </Card>
                   </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Wishlist Section */}
+        <Card className="border-border/50 mb-8">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Heart className="w-5 h-5 text-pink-500" />
+                Khóa học yêu thích
+              </CardTitle>
+              <Link to="/courses">
+                <Button variant="ghost" size="sm" className="gap-1">
+                  Xem tất cả
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
+            <CardDescription>Các khóa học bạn đã lưu để xem sau</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {wishlistCourses.length === 0 ? (
+              <div className="text-center py-8">
+                <Heart className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+                <p className="text-muted-foreground">Bạn chưa lưu khóa học nào</p>
+                <Link to="/courses">
+                  <Button className="mt-4" variant="outline">
+                    Khám phá khóa học
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {wishlistCourses.map((item) => (
+                  <div key={item.id} className="group relative">
+                    <Link 
+                      to={`/course/${item.course?.slug || item.course_id}`}
+                      className="block"
+                    >
+                      <Card className="overflow-hidden hover:shadow-lg transition-shadow border-border/50 h-full">
+                        <div className="aspect-video relative overflow-hidden bg-muted">
+                          {item.course?.image_url ? (
+                            <img 
+                              src={item.course.image_url} 
+                              alt={item.course.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
+                              <PlayCircle className="w-12 h-12 text-primary/50" />
+                            </div>
+                          )}
+                        </div>
+                        <CardContent className="p-4">
+                          <h4 className="font-semibold text-foreground line-clamp-2 mb-2 group-hover:text-primary transition-colors">
+                            {item.course?.title || 'Khóa học'}
+                          </h4>
+                          {item.course?.creator_name && (
+                            <p className="text-sm text-muted-foreground mb-2">
+                              {item.course.creator_name}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                            {item.course?.rating && (
+                              <span className="flex items-center gap-1">
+                                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                                {item.course.rating.toFixed(1)}
+                              </span>
+                            )}
+                            {item.course?.student_count != null && (
+                              <span className="flex items-center gap-1">
+                                <Users className="w-4 h-4" />
+                                {item.course.student_count.toLocaleString()}
+                              </span>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                    <div className="absolute top-2 right-2">
+                      <WishlistButton
+                        isInWishlist={isInWishlist(item.course_id || '')}
+                        onToggle={async () => {
+                          await toggleWishlist(item.course_id || '');
+                          // Remove from local state immediately
+                          setWishlistCourses(prev => prev.filter(w => w.id !== item.id));
+                        }}
+                        size="sm"
+                      />
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
