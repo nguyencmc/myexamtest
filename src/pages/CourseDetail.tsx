@@ -58,6 +58,7 @@ interface Course {
   topic: string | null;
   term_count: number | null;
   view_count: number | null;
+  creator_id: string | null;
   creator_name: string | null;
   is_official: boolean | null;
   is_featured: boolean | null;
@@ -350,7 +351,10 @@ const CourseDetail = () => {
               {/* Instructor */}
               <div className="flex items-center gap-2 text-sm text-gray-300">
                 <span>Giảng viên:</span>
-                <Link to="#" className="text-purple-400 hover:underline font-medium">
+                <Link 
+                  to={course.creator_id ? `/instructor/${course.creator_id}` : '#'} 
+                  className="text-purple-400 hover:underline font-medium"
+                >
                   {course.creator_name || "AI-Exam.cloud"}
                 </Link>
               </div>
@@ -557,14 +561,19 @@ const CourseDetail = () => {
             <div className="bg-card border rounded-xl p-6">
               <h2 className="text-xl font-bold mb-4">Giảng viên</h2>
               <div className="flex items-start gap-4">
-                <Avatar className="w-24 h-24">
-                  <AvatarImage src="" />
-                  <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-                    {(course.creator_name || "AI")[0]}
-                  </AvatarFallback>
-                </Avatar>
+                <Link to={course.creator_id ? `/instructor/${course.creator_id}` : '#'}>
+                  <Avatar className="w-24 h-24 hover:ring-2 hover:ring-primary transition-all">
+                    <AvatarImage src="" />
+                    <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
+                      {(course.creator_name || "AI")[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                </Link>
                 <div>
-                  <Link to="#" className="text-lg font-semibold text-primary hover:underline">
+                  <Link 
+                    to={course.creator_id ? `/instructor/${course.creator_id}` : '#'} 
+                    className="text-lg font-semibold text-primary hover:underline"
+                  >
                     {course.creator_name || "AI-Exam.cloud"}
                   </Link>
                   <p className="text-sm text-muted-foreground mb-2">Chuyên gia đào tạo</p>
