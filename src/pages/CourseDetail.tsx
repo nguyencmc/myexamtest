@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { CourseReviews } from "@/components/course/CourseReviews";
+import { VideoPreviewModal } from "@/components/course/VideoPreviewModal";
 import {
   Play,
   PlayCircle,
@@ -103,6 +104,7 @@ const CourseDetail = () => {
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
   const [liveRating, setLiveRating] = useState<{ avg: number; count: number } | null>(null);
+  const [showVideoModal, setShowVideoModal] = useState(false);
 
   useEffect(() => {
     fetchCourse();
@@ -383,26 +385,22 @@ const CourseDetail = () => {
           <div className="lg:col-span-2 space-y-8">
             {/* Video Preview - Mobile */}
             <div className="lg:hidden">
-              <div className="relative aspect-video bg-slate-900 rounded-xl overflow-hidden group cursor-pointer">
-                {course.preview_video_url ? (
-                  <video
-                    src={course.preview_video_url}
-                    className="w-full h-full object-cover"
-                    controls={isPlaying}
-                    onClick={() => setIsPlaying(true)}
-                  />
-                ) : course.image_url ? (
+              <div 
+                className="relative aspect-video bg-slate-900 rounded-xl overflow-hidden group cursor-pointer"
+                onClick={() => setShowVideoModal(true)}
+              >
+                {course.image_url ? (
                   <img src={course.image_url} alt={course.title} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center">
-                    <button
-                      onClick={() => setIsPlaying(!isPlaying)}
-                      className="w-20 h-20 bg-white/90 rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform"
-                    >
-                      <Play className="w-8 h-8 text-slate-900 ml-1" />
-                    </button>
-                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-accent/30" />
                 )}
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                  <button
+                    className="w-20 h-20 bg-white/90 rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform"
+                  >
+                    <Play className="w-8 h-8 text-slate-900 ml-1" />
+                  </button>
+                </div>
                 <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
                   <p className="text-white text-sm">Xem trước khóa học này</p>
                 </div>
@@ -602,26 +600,22 @@ const CourseDetail = () => {
             <div className="sticky top-24">
               <div className="bg-card border rounded-xl overflow-hidden shadow-lg">
                 {/* Video Preview */}
-                <div className="relative aspect-video bg-slate-900 cursor-pointer group">
-                  {course.preview_video_url ? (
-                    <video
-                      src={course.preview_video_url}
-                      className="w-full h-full object-cover"
-                      controls={isPlaying}
-                      onClick={() => setIsPlaying(true)}
-                    />
-                  ) : course.image_url ? (
+                <div 
+                  className="relative aspect-video bg-slate-900 cursor-pointer group"
+                  onClick={() => setShowVideoModal(true)}
+                >
+                  {course.image_url ? (
                     <img src={course.image_url} alt={course.title} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center">
-                      <button
-                        onClick={() => setIsPlaying(!isPlaying)}
-                        className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform"
-                      >
-                        <Play className="w-6 h-6 text-slate-900 ml-1" />
-                      </button>
-                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-accent/30" />
                   )}
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                    <button
+                      className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform"
+                    >
+                      <Play className="w-6 h-6 text-slate-900 ml-1" />
+                    </button>
+                  </div>
                   <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
                     <p className="text-white text-sm text-center">Xem trước khóa học</p>
                   </div>
@@ -723,6 +717,15 @@ const CourseDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Video Preview Modal */}
+      <VideoPreviewModal
+        isOpen={showVideoModal}
+        onClose={() => setShowVideoModal(false)}
+        videoUrl={course.preview_video_url}
+        thumbnailUrl={course.image_url}
+        courseTitle={course.title}
+      />
 
       <FloatingActions />
       <Footer />
