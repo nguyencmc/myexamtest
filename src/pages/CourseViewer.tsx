@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CourseTestTaking } from '@/components/course/CourseTestTaking';
 import { LessonNotes } from '@/components/course/LessonNotes';
 import { CourseCertificate } from '@/components/course/CourseCertificate';
+import { CourseQA } from '@/components/course/CourseQA';
 import { 
   Play, 
   Pause, 
@@ -41,6 +42,7 @@ interface Course {
   title: string;
   description: string | null;
   creator_name: string | null;
+  creator_id: string | null;
   image_url: string | null;
 }
 
@@ -633,10 +635,13 @@ const CourseViewer = () => {
             </TabsContent>
             
             <TabsContent value="qa">
-              <div className="bg-muted/50 rounded-lg p-4 text-center">
-                <MessageSquare className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-muted-foreground">Tính năng hỏi đáp sẽ sớm được cập nhật</p>
-              </div>
+              {currentLesson && (
+                <CourseQA 
+                  courseId={id || ''} 
+                  lessonId={currentLesson.id} 
+                  instructorId={course?.creator_id}
+                />
+              )}
             </TabsContent>
           </Tabs>
         </div>
