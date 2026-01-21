@@ -19,7 +19,8 @@ import {
 import { MobileMenu } from "./MobileMenu";
 
 const navLinks = [
-  { name: "Luyện thi", href: "/exams" },
+  { name: "Luyện tập", href: "/practice" },
+  { name: "Đề thi", href: "/exams" },
   { name: "Flashcards", href: "/flashcards" },
   { name: "Podcasts", href: "/podcasts" },
   { name: "Khóa học", href: "/courses" },
