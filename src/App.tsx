@@ -83,6 +83,15 @@ const App = () => (
             <Route path="/verify-certificate/:certificateNumber" element={<VerifyCertificate />} />
             <Route path="/instructor/:instructorId" element={<InstructorProfile />} />
             
+            {/* Practice feature routes */}
+            <Route path="/practice" element={<QuestionBankPage />} />
+            <Route path="/practice/setup/:setId" element={<PracticeSetup />} />
+            <Route path="/practice/run/:setId" element={<PracticeRunner />} />
+            <Route path="/practice/exam-setup/:setId" element={<ExamSetup />} />
+            <Route path="/practice/exam/:setId" element={<ExamRunner />} />
+            <Route path="/practice/result/:sessionId" element={<ExamResult />} />
+            <Route path="/practice/review" element={<ReviewWrongRunner />} />
+            
             {/* Admin & Teacher routes */}
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/teacher" element={<TeacherDashboard />} />

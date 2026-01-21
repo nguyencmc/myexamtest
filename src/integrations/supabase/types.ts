@@ -1299,6 +1299,154 @@ export type Database = {
           },
         ]
       }
+      practice_attempts: {
+        Row: {
+          created_at: string
+          exam_session_id: string | null
+          id: string
+          is_correct: boolean
+          mode: string
+          question_id: string
+          selected: Json
+          time_spent_sec: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          exam_session_id?: string | null
+          id?: string
+          is_correct: boolean
+          mode: string
+          question_id: string
+          selected: Json
+          time_spent_sec?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          exam_session_id?: string | null
+          id?: string
+          is_correct?: boolean
+          mode?: string
+          question_id?: string
+          selected?: Json
+          time_spent_sec?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "practice_attempts_exam_session_id_fkey"
+            columns: ["exam_session_id"]
+            isOneToOne: false
+            referencedRelation: "practice_exam_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "practice_attempts_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "practice_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      practice_exam_sessions: {
+        Row: {
+          correct: number | null
+          duration_sec: number
+          id: string
+          score: number | null
+          set_id: string | null
+          started_at: string
+          status: string | null
+          submitted_at: string | null
+          total: number | null
+          user_id: string
+        }
+        Insert: {
+          correct?: number | null
+          duration_sec: number
+          id?: string
+          score?: number | null
+          set_id?: string | null
+          started_at?: string
+          status?: string | null
+          submitted_at?: string | null
+          total?: number | null
+          user_id: string
+        }
+        Update: {
+          correct?: number | null
+          duration_sec?: number
+          id?: string
+          score?: number | null
+          set_id?: string | null
+          started_at?: string
+          status?: string | null
+          submitted_at?: string | null
+          total?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "practice_exam_sessions_set_id_fkey"
+            columns: ["set_id"]
+            isOneToOne: false
+            referencedRelation: "question_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      practice_questions: {
+        Row: {
+          answer: Json
+          choices: Json
+          created_at: string
+          difficulty: number | null
+          explanation: string | null
+          id: string
+          prompt: string
+          question_order: number | null
+          set_id: string
+          tags: string[] | null
+          type: string | null
+        }
+        Insert: {
+          answer: Json
+          choices?: Json
+          created_at?: string
+          difficulty?: number | null
+          explanation?: string | null
+          id?: string
+          prompt: string
+          question_order?: number | null
+          set_id: string
+          tags?: string[] | null
+          type?: string | null
+        }
+        Update: {
+          answer?: Json
+          choices?: Json
+          created_at?: string
+          difficulty?: number | null
+          explanation?: string | null
+          id?: string
+          prompt?: string
+          question_order?: number | null
+          set_id?: string
+          tags?: string[] | null
+          type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "practice_questions_set_id_fkey"
+            columns: ["set_id"]
+            isOneToOne: false
+            referencedRelation: "question_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1352,6 +1500,53 @@ export type Database = {
           username?: string | null
         }
         Relationships: []
+      }
+      question_sets: {
+        Row: {
+          course_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_published: boolean | null
+          level: string | null
+          question_count: number | null
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          course_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_published?: boolean | null
+          level?: string | null
+          question_count?: number | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_published?: boolean | null
+          level?: string | null
+          question_count?: number | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_sets_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       questions: {
         Row: {
