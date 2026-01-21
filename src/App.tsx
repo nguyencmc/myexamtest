@@ -46,6 +46,15 @@ import StudyGroupDetail from "./pages/StudyGroupDetail";
 import VerifyCertificate from "./pages/VerifyCertificate";
 import InstructorProfile from "./pages/InstructorProfile";
 
+// Practice feature pages
+import QuestionBankPage from "./features/practice/pages/QuestionBankPage";
+import PracticeSetup from "./features/practice/pages/PracticeSetup";
+import PracticeRunner from "./features/practice/pages/PracticeRunner";
+import ExamSetup from "./features/practice/pages/ExamSetup";
+import ExamRunner from "./features/practice/pages/ExamRunner";
+import ExamResult from "./features/practice/pages/ExamResult";
+import ReviewWrongRunner from "./features/practice/pages/ReviewWrongRunner";
+
 const queryClient = new QueryClient();
 
 const App = () => (
