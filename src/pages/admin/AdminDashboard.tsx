@@ -19,8 +19,7 @@ import {
   Settings,
   ChevronRight,
   Plus,
-  Download,
-  HelpCircle
+  Download
 } from 'lucide-react';
 import {
   Table,
@@ -283,14 +282,12 @@ const AdminDashboard = () => {
     { title: 'Quản lý danh mục', icon: Layers, href: '/admin/categories', color: 'text-purple-500', bg: 'bg-purple-500/10' },
     { title: 'Quản lý khóa học', icon: BookOpen, href: '/admin/courses', color: 'text-cyan-500', bg: 'bg-cyan-500/10' },
     { title: 'Quản lý đề thi', icon: FileText, href: '/admin/exams', color: 'text-green-500', bg: 'bg-green-500/10' },
-    { title: 'Bộ câu hỏi luyện tập', icon: HelpCircle, href: '/admin/question-sets', color: 'text-teal-500', bg: 'bg-teal-500/10' },
     { title: 'Quản lý Flashcard', icon: Layers, href: '/admin/flashcards', color: 'text-orange-500', bg: 'bg-orange-500/10' },
     { title: 'Quản lý Podcast', icon: Headphones, href: '/admin/podcasts', color: 'text-pink-500', bg: 'bg-pink-500/10' },
   ];
 
   const quickActions = [
     { title: 'Tạo đề thi', desc: 'Thêm đề thi mới', icon: Plus, href: '/admin/exams/create', color: 'text-primary', bg: 'bg-primary/10' },
-    { title: 'Tạo bộ câu hỏi', desc: 'Thêm bộ đề luyện tập', icon: HelpCircle, href: '/admin/question-sets/create', color: 'text-teal-500', bg: 'bg-teal-500/10' },
     { title: 'Tạo Flashcard', desc: 'Thêm bộ thẻ ghi nhớ', icon: Layers, href: '/admin/flashcards/create', color: 'text-orange-500', bg: 'bg-orange-500/10' },
     { title: 'Tạo Podcast', desc: 'Thêm bài nghe mới', icon: Headphones, href: '/admin/podcasts/create', color: 'text-pink-500', bg: 'bg-pink-500/10' },
   ];
