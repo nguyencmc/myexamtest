@@ -128,7 +128,7 @@ const ExamDetail = () => {
                   size="lg"
                   variant="outline"
                   className="text-lg px-6"
-                  onClick={() => navigate(`/practice/setup/${exam.id}`)}
+                  onClick={() => navigate(`/exam-practice/setup/${exam.id}`)}
                 >
                   <BookOpen className="w-5 h-5 mr-2" />
                   Luyện tập
@@ -257,7 +257,7 @@ const ExamDetail = () => {
               size="lg"
               variant="outline"
               className="flex-1"
-              onClick={() => navigate(`/practice/setup/${exam.id}`)}
+              onClick={() => navigate(`/exam-practice/setup/${exam.id}`)}
             >
               <BookOpen className="w-5 h-5 mr-2" />
               Luyện tập

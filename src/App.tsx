@@ -55,6 +55,8 @@ import ExamSetup from "./features/practice/pages/ExamSetup";
 import ExamRunner from "./features/practice/pages/ExamRunner";
 import ExamResult from "./features/practice/pages/ExamResult";
 import ReviewWrongRunner from "./features/practice/pages/ReviewWrongRunner";
+import ExamPracticeSetup from "./features/practice/pages/ExamPracticeSetup";
+import ExamPracticeRunner from "./features/practice/pages/ExamPracticeRunner";
 
 const queryClient = new QueryClient();
 
@@ -101,6 +103,10 @@ const App = () => (
             <Route path="/practice/exam/:setId" element={<ExamRunner />} />
             <Route path="/practice/result/:sessionId" element={<ExamResult />} />
             <Route path="/practice/review" element={<ReviewWrongRunner />} />
+            
+            {/* Exam Practice routes (practice from exams table) */}
+            <Route path="/exam-practice/setup/:examId" element={<ExamPracticeSetup />} />
+            <Route path="/exam-practice/run/:examId" element={<ExamPracticeRunner />} />
             
             {/* Admin & Teacher routes */}
             <Route path="/admin" element={<AdminDashboard />} />
