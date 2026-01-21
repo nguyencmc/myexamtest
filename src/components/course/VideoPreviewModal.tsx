@@ -16,7 +16,14 @@ import {
   Minimize,
   SkipBack,
   SkipForward,
+  Gauge,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface VideoPreviewModalProps {
   isOpen: boolean;
@@ -41,6 +48,8 @@ export const VideoPreviewModal = ({
   const [volume, setVolume] = useState(1);
   const [showControls, setShowControls] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const playbackSpeeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
@@ -110,6 +119,13 @@ export const VideoPreviewModal = ({
         Math.max(videoRef.current.currentTime + seconds, 0),
         duration
       );
+    }
+  };
+
+  const changePlaybackSpeed = (speed: number) => {
+    setPlaybackSpeed(speed);
+    if (videoRef.current) {
+      videoRef.current.playbackRate = speed;
     }
   };
 
@@ -277,6 +293,30 @@ export const VideoPreviewModal = ({
 
                   {/* Right Controls */}
                   <div className="flex items-center gap-2">
+                    {/* Playback Speed Control */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="text-white hover:bg-white/20 h-8 px-2 text-sm font-medium"
+                        >
+                          <Gauge className="h-4 w-4 mr-1" />
+                          {playbackSpeed}x
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="min-w-[80px]">
+                        {playbackSpeeds.map((speed) => (
+                          <DropdownMenuItem
+                            key={speed}
+                            onClick={() => changePlaybackSpeed(speed)}
+                            className={playbackSpeed === speed ? "bg-accent" : ""}
+                          >
+                            {speed}x
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
                     <Button
                       variant="ghost"
                       size="icon"
