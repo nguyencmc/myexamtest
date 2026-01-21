@@ -51,18 +51,81 @@ export const VideoPreviewModal = ({
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const playbackSpeeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
+  const hasRestoredPosition = useRef(false);
 
+  // Generate storage key from video URL
+  const getStorageKey = (url: string) => {
+    return `video_position_${btoa(url).slice(0, 50)}`;
+  };
+
+  // Save playback position to localStorage
+  const savePlaybackPosition = () => {
+    if (videoRef.current && videoUrl && currentTime > 0) {
+      const key = getStorageKey(videoUrl);
+      const data = {
+        position: videoRef.current.currentTime,
+        duration: duration,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(key, JSON.stringify(data));
+    }
+  };
+
+  // Load saved playback position
+  const loadPlaybackPosition = (): number | null => {
+    if (!videoUrl) return null;
+    try {
+      const key = getStorageKey(videoUrl);
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        const data = JSON.parse(saved);
+        // Only restore if saved within last 7 days
+        const sevenDays = 7 * 24 * 60 * 60 * 1000;
+        if (Date.now() - data.timestamp < sevenDays) {
+          return data.position;
+        }
+      }
+    } catch (e) {
+      console.error("Error loading playback position:", e);
+    }
+    return null;
+  };
+
+  // Auto-save position periodically
   useEffect(() => {
-    if (isOpen && videoRef.current) {
-      videoRef.current.play();
-      setIsPlaying(true);
+    if (!isOpen || !isPlaying) return;
+    
+    const saveInterval = setInterval(() => {
+      savePlaybackPosition();
+    }, 5000); // Save every 5 seconds
+
+    return () => clearInterval(saveInterval);
+  }, [isOpen, isPlaying, currentTime, videoUrl]);
+
+  // Save position when modal closes
+  useEffect(() => {
+    if (!isOpen && videoUrl && currentTime > 0) {
+      savePlaybackPosition();
     }
   }, [isOpen]);
 
   useEffect(() => {
+    if (isOpen && videoRef.current && !hasRestoredPosition.current) {
+      const savedPosition = loadPlaybackPosition();
+      if (savedPosition && savedPosition > 0) {
+        videoRef.current.currentTime = savedPosition;
+        setCurrentTime(savedPosition);
+      }
+      hasRestoredPosition.current = true;
+      videoRef.current.play();
+      setIsPlaying(true);
+    }
+  }, [isOpen, videoUrl]);
+
+  useEffect(() => {
     if (!isOpen) {
       setIsPlaying(false);
-      setCurrentTime(0);
+      hasRestoredPosition.current = false;
     }
   }, [isOpen]);
 
