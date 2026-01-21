@@ -123,27 +123,16 @@ const ExamDetail = () => {
             </div>
 
             <div className="flex flex-col gap-3">
-              <div className="flex gap-3">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="text-lg px-6"
-                  onClick={() => navigate(`/exam-practice/setup/${exam.id}`)}
-                >
-                  <BookOpen className="w-5 h-5 mr-2" />
-                  Luyện tập
-                </Button>
-                <Button
-                  size="lg"
-                  className="text-lg px-6"
-                  onClick={() => navigate(`/exam/${slug}/take`)}
-                >
-                  <Play className="w-5 h-5 mr-2" />
-                  Thi thử
-                </Button>
-              </div>
+              <Button
+                size="lg"
+                className="text-lg px-8"
+                onClick={() => navigate(`/exam/${slug}/take`)}
+              >
+                <Play className="w-5 h-5 mr-2" />
+                Bắt đầu làm bài
+              </Button>
               <p className="text-sm text-muted-foreground text-center">
-                Chọn chế độ phù hợp với bạn
+                Nhấn để bắt đầu tính giờ
               </p>
             </div>
           </div>
@@ -252,25 +241,14 @@ const ExamDetail = () => {
 
         {/* CTA Mobile */}
         <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border">
-          <div className="flex gap-2">
-            <Button
-              size="lg"
-              variant="outline"
-              className="flex-1"
-              onClick={() => navigate(`/exam-practice/setup/${exam.id}`)}
-            >
-              <BookOpen className="w-5 h-5 mr-2" />
-              Luyện tập
-            </Button>
-            <Button
-              size="lg"
-              className="flex-1"
-              onClick={() => navigate(`/exam/${slug}/take`)}
-            >
-              <Play className="w-5 h-5 mr-2" />
-              Thi thử
-            </Button>
-          </div>
+          <Button
+            size="lg"
+            className="w-full text-lg"
+            onClick={() => navigate(`/exam/${slug}/take`)}
+          >
+            <Play className="w-5 h-5 mr-2" />
+            Bắt đầu làm bài
+          </Button>
         </div>
       </div>
     </div>

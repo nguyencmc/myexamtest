@@ -39,6 +39,7 @@ import CategoryManagement from "./pages/admin/CategoryManagement";
 import UserManagement from "./pages/admin/UserManagement";
 import CourseManagement from "./pages/admin/CourseManagement";
 import CourseEditor from "./pages/admin/CourseEditor";
+import QuestionSetManagement from "./pages/admin/QuestionSetManagement";
 import QuestionSetEditor from "./pages/admin/QuestionSetEditor";
 import StudentDashboard from "./pages/StudentDashboard";
 import Achievements from "./pages/Achievements";
@@ -55,8 +56,6 @@ import ExamSetup from "./features/practice/pages/ExamSetup";
 import ExamRunner from "./features/practice/pages/ExamRunner";
 import ExamResult from "./features/practice/pages/ExamResult";
 import ReviewWrongRunner from "./features/practice/pages/ReviewWrongRunner";
-import ExamPracticeSetup from "./features/practice/pages/ExamPracticeSetup";
-import ExamPracticeRunner from "./features/practice/pages/ExamPracticeRunner";
 
 const queryClient = new QueryClient();
 
@@ -104,10 +103,6 @@ const App = () => (
             <Route path="/practice/result/:sessionId" element={<ExamResult />} />
             <Route path="/practice/review" element={<ReviewWrongRunner />} />
             
-            {/* Exam Practice routes (practice from exams table) */}
-            <Route path="/exam-practice/setup/:examId" element={<ExamPracticeSetup />} />
-            <Route path="/exam-practice/run/:examId" element={<ExamPracticeRunner />} />
-            
             {/* Admin & Teacher routes */}
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/teacher" element={<TeacherDashboard />} />
@@ -125,6 +120,7 @@ const App = () => (
             <Route path="/admin/courses" element={<CourseManagement />} />
             <Route path="/admin/courses/create" element={<CourseEditor />} />
             <Route path="/admin/courses/:id" element={<CourseEditor />} />
+            <Route path="/admin/question-sets" element={<QuestionSetManagement />} />
             <Route path="/admin/question-sets/create" element={<QuestionSetEditor />} />
             <Route path="/admin/question-sets/:id" element={<QuestionSetEditor />} />
             

@@ -19,6 +19,7 @@ import {
 import { MobileMenu } from "./MobileMenu";
 
 const navLinks = [
+  { name: "Luyện tập", href: "/practice" },
   { name: "Đề thi", href: "/exams" },
   { name: "Flashcards", href: "/flashcards" },
   { name: "Podcasts", href: "/podcasts" },
