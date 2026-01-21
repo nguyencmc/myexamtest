@@ -41,6 +41,9 @@ export const HeroSection = () => {
                 src={heroLaptop}
                 alt="The Best Study Platform"
                 className="w-full max-w-2xl mx-auto drop-shadow-2xl"
+                width={1024}
+                height={768}
+                fetchPriority="high"
               />
             </div>
             {/* Decorative elements */}
