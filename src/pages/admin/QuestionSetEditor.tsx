@@ -74,6 +74,8 @@ const QuestionSetEditor = () => {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [isPublished, setIsPublished] = useState(true);
+  const [courseId, setCourseId] = useState<string | null>(null);
+  const [courses, setCourses] = useState<{ id: string; title: string }[]>([]);
   
   // Questions
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -93,10 +95,24 @@ const QuestionSetEditor = () => {
   }, [hasAccess, roleLoading, navigate, toast]);
 
   useEffect(() => {
-    if (hasAccess && isEditMode && id) {
-      fetchData();
+    if (hasAccess) {
+      fetchCourses();
+      if (isEditMode && id) {
+        fetchData();
+      }
     }
   }, [hasAccess, isEditMode, id]);
+
+  const fetchCourses = async () => {
+    const { data, error } = await supabase
+      .from('courses')
+      .select('id, title')
+      .order('title', { ascending: true });
+    
+    if (!error && data) {
+      setCourses(data);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -123,6 +139,7 @@ const QuestionSetEditor = () => {
     setLevel(setData.level || 'medium');
     setTags(setData.tags || []);
     setIsPublished(setData.is_published ?? true);
+    setCourseId(setData.course_id || null);
 
     // Fetch questions
     const { data: questionsData, error: questionsError } = await supabase
@@ -232,6 +249,7 @@ const QuestionSetEditor = () => {
             level,
             tags,
             is_published: isPublished,
+            course_id: courseId,
             updated_at: new Date().toISOString(),
           })
           .eq('id', id);
@@ -246,6 +264,7 @@ const QuestionSetEditor = () => {
             level,
             tags,
             is_published: isPublished,
+            course_id: courseId,
             question_count: 0,
           })
           .select()
@@ -435,6 +454,29 @@ const QuestionSetEditor = () => {
                       ))}
                     </div>
                   )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Liên kết khóa học</Label>
+                  <Select 
+                    value={courseId || 'none'} 
+                    onValueChange={(v) => setCourseId(v === 'none' ? null : v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn khóa học..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">-- Không liên kết --</SelectItem>
+                      {courses.map((course) => (
+                        <SelectItem key={course.id} value={course.id}>
+                          {course.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Bộ đề sẽ hiển thị trong phần "Luyện thi" của khóa học được chọn
+                  </p>
                 </div>
 
                 <div className="flex items-center justify-between pt-2">
