@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { MiniPlayerProvider } from "@/contexts/MiniPlayerContext";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { MiniPlayer } from "@/components/podcast/MiniPlayer";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -69,13 +70,14 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <MiniPlayerProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <TooltipProvider>
+        <AuthProvider>
+          <MiniPlayerProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/courses" element={<Courses />} />
@@ -140,14 +142,15 @@ const App = () => (
               <Route path="/admin/question-sets/create" element={<QuestionSetEditor />} />
               <Route path="/admin/question-sets/:id" element={<QuestionSetEditor />} />
               
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <MiniPlayer />
-          </BrowserRouter>
-        </MiniPlayerProvider>
-      </AuthProvider>
-    </TooltipProvider>
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <MiniPlayer />
+            </BrowserRouter>
+          </MiniPlayerProvider>
+        </AuthProvider>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

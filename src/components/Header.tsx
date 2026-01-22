@@ -17,6 +17,7 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { MobileMenu } from "./MobileMenu";
+import { ThemeToggle } from "./ThemeToggle";
 
 const navLinks = [
   { name: "Luyện tập", href: "/practice" },
@@ -100,6 +101,7 @@ export const Header = () => {
 
           {/* Auth Buttons */}
           <div className="hidden lg:flex items-center gap-4">
+            <ThemeToggle />
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -207,6 +209,7 @@ export const Header = () => {
 
           {/* Mobile Menu Button */}
           <div className="lg:hidden flex items-center gap-2">
+            <ThemeToggle />
             {user && profile && (
               <Avatar className="w-8 h-8 ring-2 ring-primary/30">
                 <AvatarImage src={profile.avatar_url || undefined} />
