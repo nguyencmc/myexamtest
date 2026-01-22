@@ -1,6 +1,12 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Layers, Loader2 } from 'lucide-react';
 import { ChoiceItem } from './ChoiceItem';
+import { useAuth } from '@/contexts/AuthContext';
+import { createFlashcardFromQuestion } from '@/features/flashcards/api';
+import { toast } from 'sonner';
 import type { PracticeQuestion } from '../types';
 
 interface QuestionCardProps {
@@ -24,6 +30,10 @@ export function QuestionCard({
   isCorrect,
   onSelectAnswer,
 }: QuestionCardProps) {
+  const { user } = useAuth();
+  const [isCreatingFlashcard, setIsCreatingFlashcard] = useState(false);
+  const [flashcardCreated, setFlashcardCreated] = useState(false);
+
   const getDifficultyBadge = (difficulty: number) => {
     if (difficulty <= 2) return { label: 'Dễ', variant: 'secondary' as const };
     if (difficulty === 3) return { label: 'Trung bình', variant: 'default' as const };
@@ -31,6 +41,36 @@ export function QuestionCard({
   };
 
   const difficultyInfo = getDifficultyBadge(question.difficulty);
+
+  const handleCreateFlashcard = async () => {
+    if (!user) {
+      toast.error('Vui lòng đăng nhập để tạo flashcard');
+      return;
+    }
+
+    setIsCreatingFlashcard(true);
+    try {
+      // Find correct answer text
+      const correctChoice = question.choices.find(c => c.id === question.answer);
+      const correctAnswerText = correctChoice ? correctChoice.text : String(question.answer);
+
+      await createFlashcardFromQuestion(
+        user.id,
+        question.prompt,
+        correctAnswerText,
+        question.explanation || null,
+        question.id
+      );
+      
+      setFlashcardCreated(true);
+      toast.success('Đã thêm vào Mistakes (Flashcards)');
+    } catch (error) {
+      console.error('Failed to create flashcard:', error);
+      toast.error('Không thể tạo flashcard');
+    } finally {
+      setIsCreatingFlashcard(false);
+    }
+  };
 
   return (
     <Card className="w-full">
@@ -78,12 +118,50 @@ export function QuestionCard({
         {/* Explanation */}
         {showResult && question.explanation && (
           <div className="mt-6 p-4 rounded-xl bg-muted/50 border">
-            <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
-              💡 Giải thích
-            </h4>
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="font-semibold text-sm flex items-center gap-2">
+                💡 Giải thích
+              </h4>
+              {!isCorrect && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleCreateFlashcard}
+                  disabled={isCreatingFlashcard || flashcardCreated}
+                  className="gap-1.5 h-7 text-xs"
+                >
+                  {isCreatingFlashcard ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Layers className="w-3 h-3" />
+                  )}
+                  {flashcardCreated ? 'Đã thêm' : 'Tạo flashcard'}
+                </Button>
+              )}
+            </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               {question.explanation}
             </p>
+          </div>
+        )}
+
+        {/* Show flashcard button even without explanation for wrong answers */}
+        {showResult && !question.explanation && !isCorrect && (
+          <div className="mt-4 flex justify-end">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleCreateFlashcard}
+              disabled={isCreatingFlashcard || flashcardCreated}
+              className="gap-1.5"
+            >
+              {isCreatingFlashcard ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Layers className="w-4 h-4" />
+              )}
+              {flashcardCreated ? 'Đã thêm vào Flashcards' : 'Tạo flashcard từ câu sai'}
+            </Button>
           </div>
         )}
       </CardContent>
