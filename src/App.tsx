@@ -79,7 +79,7 @@ const App = () => (
             <Route path="/courses" element={<Courses />} />
             <Route path="/course/:id" element={<CourseDetail />} />
             <Route path="/course/:id/learn" element={<CourseViewer />} />
-            <Route path="/flashcards" element={<Flashcards />} />
+            {/* Old flashcards route removed - now using DeckListPage at /flashcards */}
             <Route path="/podcasts" element={<Podcasts />} />
             <Route path="/podcast/:slug" element={<PodcastDetail />} />
             <Route path="/exams" element={<Exams />} />

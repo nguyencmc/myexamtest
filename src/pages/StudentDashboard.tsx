@@ -17,6 +17,7 @@ import { WishlistButton } from '@/components/course/WishlistButton';
 import { useWishlist } from '@/hooks/useWishlist';
 import { PracticeTodayWidget } from '@/components/dashboard/PracticeTodayWidget';
 import { PracticeStatsWidget } from '@/components/dashboard/PracticeStatsWidget';
+import { useDueCards } from '@/features/flashcards/hooks/useDueCards';
 import { 
   BookOpen, 
   FileText, 
@@ -117,6 +118,7 @@ const StudentDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [streak, setStreak] = useState(0);
   const { isInWishlist, toggleWishlist, refetch: refetchWishlist } = useWishlist();
+  const { dueCount: flashcardDueCount } = useDueCards();
 
   useEffect(() => {
     if (user) {
@@ -402,15 +404,27 @@ const StudentDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-border/50 col-span-1">
-            <CardContent className="p-4">
-              <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center mb-3">
-                <Layers className="w-5 h-5 text-cyan-500" />
-              </div>
-              <p className="text-2xl font-bold text-foreground">{stats.flashcardsLearned}</p>
-              <p className="text-sm text-muted-foreground">Flashcard đã nhớ</p>
-            </CardContent>
-          </Card>
+          <Link to={flashcardDueCount > 0 ? "/flashcards/today" : "/flashcards"}>
+            <Card className="border-border/50 col-span-1 hover:border-primary/50 hover:shadow-md transition-all cursor-pointer group h-full relative">
+              <CardContent className="p-4">
+                <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center mb-3 group-hover:bg-cyan-500/20 transition-colors">
+                  <Layers className="w-5 h-5 text-cyan-500" />
+                </div>
+                {flashcardDueCount > 0 ? (
+                  <>
+                    <p className="text-2xl font-bold text-foreground">{flashcardDueCount}</p>
+                    <p className="text-sm text-muted-foreground group-hover:text-primary transition-colors">Thẻ cần ôn hôm nay</p>
+                    <Badge className="absolute top-2 right-2 bg-orange-500 text-white text-xs">Đến hạn</Badge>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-2xl font-bold text-foreground">{stats.flashcardsLearned}</p>
+                    <p className="text-sm text-muted-foreground group-hover:text-primary transition-colors">Flashcard</p>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </Link>
 
           <Link to="/my-courses">
             <Card className="border-border/50 col-span-1 hover:border-primary/50 hover:shadow-md transition-all cursor-pointer group h-full">
