@@ -58,6 +58,12 @@ import ExamRunner from "./features/practice/pages/ExamRunner";
 import ExamResult from "./features/practice/pages/ExamResult";
 import ReviewWrongRunner from "./features/practice/pages/ReviewWrongRunner";
 
+// Flashcards feature pages
+import DeckListPage from "./features/flashcards/pages/DeckListPage";
+import DeckDetailPage from "./features/flashcards/pages/DeckDetailPage";
+import StudyDeckPage from "./features/flashcards/pages/StudyDeckPage";
+import TodayPage from "./features/flashcards/pages/TodayPage";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -104,6 +110,12 @@ const App = () => (
             <Route path="/practice/exam/:setId" element={<ExamRunner />} />
             <Route path="/practice/result/:sessionId" element={<ExamResult />} />
             <Route path="/practice/review" element={<ReviewWrongRunner />} />
+            
+            {/* Flashcards feature routes */}
+            <Route path="/flashcards" element={<DeckListPage />} />
+            <Route path="/flashcards/decks/:deckId" element={<DeckDetailPage />} />
+            <Route path="/flashcards/study/:deckId" element={<StudyDeckPage />} />
+            <Route path="/flashcards/today" element={<TodayPage />} />
             
             {/* Admin & Teacher routes */}
             <Route path="/admin" element={<AdminDashboard />} />

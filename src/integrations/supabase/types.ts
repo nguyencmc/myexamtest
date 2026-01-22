@@ -1041,6 +1041,77 @@ export type Database = {
           },
         ]
       }
+      flashcard_decks: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          tags: string[] | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          tags?: string[] | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          tags?: string[] | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      flashcard_reviews: {
+        Row: {
+          due_at: string
+          ease: number
+          flashcard_id: string
+          id: string
+          interval_days: number
+          last_grade: number | null
+          repetitions: number
+          reviewed_at: string | null
+          user_id: string
+        }
+        Insert: {
+          due_at?: string
+          ease?: number
+          flashcard_id: string
+          id?: string
+          interval_days?: number
+          last_grade?: number | null
+          repetitions?: number
+          reviewed_at?: string | null
+          user_id: string
+        }
+        Update: {
+          due_at?: string
+          ease?: number
+          flashcard_id?: string
+          id?: string
+          interval_days?: number
+          last_grade?: number | null
+          repetitions?: number
+          reviewed_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flashcard_reviews_flashcard_id_fkey"
+            columns: ["flashcard_id"]
+            isOneToOne: false
+            referencedRelation: "user_flashcards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flashcard_sets: {
         Row: {
           card_count: number | null
@@ -1959,6 +2030,47 @@ export type Database = {
             columns: ["flashcard_id"]
             isOneToOne: false
             referencedRelation: "flashcards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_flashcards: {
+        Row: {
+          back: string
+          created_at: string
+          deck_id: string
+          front: string
+          hint: string | null
+          id: string
+          source_id: string | null
+          source_type: string | null
+        }
+        Insert: {
+          back: string
+          created_at?: string
+          deck_id: string
+          front: string
+          hint?: string | null
+          id?: string
+          source_id?: string | null
+          source_type?: string | null
+        }
+        Update: {
+          back?: string
+          created_at?: string
+          deck_id?: string
+          front?: string
+          hint?: string | null
+          id?: string
+          source_id?: string | null
+          source_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_flashcards_deck_id_fkey"
+            columns: ["deck_id"]
+            isOneToOne: false
+            referencedRelation: "flashcard_decks"
             referencedColumns: ["id"]
           },
         ]
