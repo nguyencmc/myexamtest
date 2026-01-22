@@ -137,6 +137,16 @@
     animation: fadeIn 0.8s ease-out forwards;
   }
 
+  /* Hide scrollbar for horizontal scroll areas */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
   /* Custom Scrollbar */
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;

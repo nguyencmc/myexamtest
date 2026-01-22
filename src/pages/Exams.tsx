@@ -481,36 +481,34 @@ const Exams = () => {
           </div>
         )}
 
-        {/* Mobile Category Chips */}
-        <div className="px-4 pb-3">
-          <ScrollArea className="w-full whitespace-nowrap">
-            <div className="flex gap-2">
-              <Button
-                variant={activeCategoryId === null ? "default" : "outline"}
-                size="sm"
-                className="rounded-full shrink-0"
-                onClick={() => handleMobileCategorySelect(null)}
-              >
-                Tất cả
-              </Button>
-              {categories.map((category, index) => {
-                const style = getCategoryStyle(category.name, index);
-                const IconComponent = style.icon;
-                return (
-                  <Button
-                    key={category.id}
-                    variant={activeCategoryId === category.id ? "default" : "outline"}
-                    size="sm"
-                    className="rounded-full shrink-0 gap-1.5"
-                    onClick={() => handleMobileCategorySelect(category.id)}
-                  >
-                    <IconComponent className="h-3.5 w-3.5" />
-                    {category.name}
-                  </Button>
-                );
-              })}
-            </div>
-          </ScrollArea>
+        {/* Mobile Category Chips - Horizontal Scroll */}
+        <div className="px-4 pb-3 overflow-x-auto scrollbar-hide">
+          <div className="flex gap-2 w-max">
+            <Button
+              variant={activeCategoryId === null ? "default" : "outline"}
+              size="sm"
+              className="rounded-full shrink-0"
+              onClick={() => handleMobileCategorySelect(null)}
+            >
+              Tất cả
+            </Button>
+            {categories.map((category, index) => {
+              const style = getCategoryStyle(category.name, index);
+              const IconComponent = style.icon;
+              return (
+                <Button
+                  key={category.id}
+                  variant={activeCategoryId === category.id ? "default" : "outline"}
+                  size="sm"
+                  className="rounded-full shrink-0 gap-1.5"
+                  onClick={() => handleMobileCategorySelect(category.id)}
+                >
+                  <IconComponent className="h-3.5 w-3.5" />
+                  {category.name}
+                </Button>
+              );
+            })}
+          </div>
         </div>
       </header>
 
@@ -773,7 +771,7 @@ const Exams = () => {
                 </div>
               </div>
             ))
-          ) : filteredExams.length === 0 ? (
+          ) : paginatedExams.length === 0 ? (
             <div className="text-center py-16">
               <FileText className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground text-lg mb-2">Không tìm thấy đề thi</p>
@@ -782,7 +780,7 @@ const Exams = () => {
               </p>
             </div>
           ) : (
-            filteredExams.map((exam) => {
+            paginatedExams.map((exam) => {
               const categoryIndex = getExamCategoryIndex(exam);
               const style = getCategoryStyle(exam.category?.name || "", categoryIndex);
               const IconComponent = style.icon;
@@ -829,6 +827,39 @@ const Exams = () => {
             })
           )}
         </div>
+
+        {/* Mobile Pagination */}
+        {totalPages > 1 && (
+          <div className="px-4 pb-4">
+            <div className="flex items-center justify-between bg-card rounded-xl border border-border p-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="gap-1"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Trước
+              </Button>
+              
+              <span className="text-sm text-muted-foreground">
+                Trang {currentPage} / {totalPages}
+              </span>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="gap-1"
+              >
+                Sau
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Mobile Bottom Navigation */}
