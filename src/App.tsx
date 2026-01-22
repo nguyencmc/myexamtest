@@ -47,6 +47,7 @@ import StudyGroups from "./pages/StudyGroups";
 import StudyGroupDetail from "./pages/StudyGroupDetail";
 import VerifyCertificate from "./pages/VerifyCertificate";
 import InstructorProfile from "./pages/InstructorProfile";
+import MyCourses from "./pages/MyCourses";
 
 // Practice feature pages
 import QuestionBankPage from "./features/practice/pages/QuestionBankPage";
@@ -87,6 +88,7 @@ const App = () => (
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/dashboard" element={<StudentDashboard />} />
+            <Route path="/my-courses" element={<MyCourses />} />
             <Route path="/achievements" element={<Achievements />} />
             <Route path="/study-groups" element={<StudyGroups />} />
             <Route path="/study-groups/:groupId" element={<StudyGroupDetail />} />
