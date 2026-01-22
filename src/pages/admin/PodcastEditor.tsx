@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -49,6 +50,7 @@ const PodcastEditor = () => {
   const { id } = useParams();
   const isEditing = !!id;
   const { isAdmin, isTeacher, loading: roleLoading } = useUserRole();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -344,6 +346,7 @@ const PodcastEditor = () => {
             transcript: transcript || null,
             host_name: hostName,
             episode_number: episodeNumber,
+            creator_id: user?.id,
           });
 
         if (error) throw error;

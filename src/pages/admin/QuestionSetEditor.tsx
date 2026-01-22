@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -61,6 +62,7 @@ const QuestionSetEditor = () => {
   const { id } = useParams();
   const isEditMode = Boolean(id);
   const { isAdmin, isTeacher, loading: roleLoading } = useUserRole();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -266,6 +268,7 @@ const QuestionSetEditor = () => {
             is_published: isPublished,
             course_id: courseId,
             question_count: 0,
+            creator_id: user?.id,
           })
           .select()
           .single();
