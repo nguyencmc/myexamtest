@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Play, 
   RotateCcw, 
@@ -14,7 +15,14 @@ import {
   AlertCircle,
   CheckCircle2,
   LogIn,
-  BookOpen
+  BookOpen,
+  Sparkles,
+  Brain,
+  Target,
+  TrendingUp,
+  ArrowRight,
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
 
 interface InProgressSession {
@@ -34,18 +42,40 @@ interface LastPracticeSet {
   title: string;
 }
 
+interface Recommendation {
+  type: 'exam' | 'flashcard' | 'practice' | 'review';
+  title: string;
+  description: string;
+  priority: 'high' | 'medium' | 'low';
+  examId?: string;
+}
+
+interface SmartRecommendationsData {
+  summary: string;
+  strengths: string[];
+  improvements: string[];
+  recommendations: Recommendation[];
+  suggestedDifficulty: 'easy' | 'medium' | 'hard';
+}
+
 export const PracticeTodayWidget = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   const [loading, setLoading] = useState(true);
   const [inProgressSession, setInProgressSession] = useState<InProgressSession | null>(null);
   const [wrongAnswers, setWrongAnswers] = useState<WrongAnswerStats>({ count: 0, questionIds: [] });
   const [lastPracticeSet, setLastPracticeSet] = useState<LastPracticeSet | null>(null);
+  
+  // Smart recommendations state
+  const [smartData, setSmartData] = useState<SmartRecommendationsData | null>(null);
+  const [smartLoading, setSmartLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
       fetchData();
+      fetchSmartRecommendations();
     } else {
       setLoading(false);
     }
@@ -134,6 +164,24 @@ export const PracticeTodayWidget = () => {
     setLoading(false);
   };
 
+  const fetchSmartRecommendations = async () => {
+    if (!user) return;
+    
+    setSmartLoading(true);
+    try {
+      const { data: result, error } = await supabase.functions.invoke('smart-recommendations', {
+        body: { userId: user.id },
+      });
+
+      if (error) throw error;
+      setSmartData(result);
+    } catch (error) {
+      console.error('Smart recommendations error:', error);
+    } finally {
+      setSmartLoading(false);
+    }
+  };
+
   const handleContinueExam = () => {
     if (inProgressSession) {
       navigate(`/practice/exam/${inProgressSession.set_id}`, {
@@ -148,10 +196,48 @@ export const PracticeTodayWidget = () => {
 
   const handleQuickPractice = () => {
     if (lastPracticeSet) {
-      // Navigate to practice setup with pre-selected count of 10
       navigate(`/practice/setup/${lastPracticeSet.id}`, {
         state: { quickStart: true, questionCount: 10 }
       });
+    }
+  };
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'exam': return <BookOpen className="w-4 h-4" />;
+      case 'flashcard': return <Brain className="w-4 h-4" />;
+      case 'practice': return <Target className="w-4 h-4" />;
+      case 'review': return <TrendingUp className="w-4 h-4" />;
+      default: return <Sparkles className="w-4 h-4" />;
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'bg-red-100 text-red-800 border-red-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'low': return 'bg-green-100 text-green-800 border-green-200';
+      default: return 'bg-muted';
+    }
+  };
+
+  const handleRecommendationClick = (rec: Recommendation) => {
+    switch (rec.type) {
+      case 'exam':
+        if (rec.examId) navigate(`/exams/${rec.examId}`);
+        else navigate('/exams');
+        break;
+      case 'flashcard':
+        navigate('/flashcards');
+        break;
+      case 'practice':
+        navigate('/practice');
+        break;
+      case 'review':
+        navigate('/practice/review');
+        break;
+      default:
+        navigate('/dashboard');
     }
   };
 
@@ -207,11 +293,23 @@ export const PracticeTodayWidget = () => {
   return (
     <Card className="border-border/50">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Zap className="w-5 h-5 text-primary" />
-          Hôm nay học gì?
-        </CardTitle>
-        <CardDescription>Luyện tập mỗi ngày để tiến bộ</CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="w-5 h-5 text-primary" />
+              Hôm nay học gì?
+            </CardTitle>
+            <CardDescription>Luyện tập mỗi ngày để tiến bộ</CardDescription>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => { fetchData(); fetchSmartRecommendations(); }}
+            disabled={loading || smartLoading}
+          >
+            <RefreshCw className={`w-4 h-4 ${(loading || smartLoading) ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* A) Continue Exam */}
@@ -304,6 +402,56 @@ export const PracticeTodayWidget = () => {
               )}
             </div>
           </div>
+        </div>
+
+        {/* D) Smart Recommendations */}
+        <div className="pt-4 border-t border-border/50">
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles className="w-5 h-5 text-primary" />
+            <h4 className="font-medium text-foreground">Gợi ý học tập thông minh</h4>
+          </div>
+          
+          {smartLoading ? (
+            <div className="flex items-center justify-center py-6">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              <span className="ml-2 text-sm text-muted-foreground">Đang phân tích...</span>
+            </div>
+          ) : smartData ? (
+            <div className="space-y-3">
+              {/* Summary */}
+              <div className="p-3 bg-primary/5 rounded-lg text-sm">
+                {smartData.summary}
+              </div>
+              
+              {/* Recommendations */}
+              {smartData.recommendations.slice(0, 3).map((rec, i) => (
+                <div 
+                  key={i}
+                  className="flex items-center gap-3 p-3 rounded-lg border border-border/50 hover:bg-accent/5 cursor-pointer transition-colors"
+                  onClick={() => handleRecommendationClick(rec)}
+                >
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                    {getTypeIcon(rec.type)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm">{rec.title}</p>
+                    <p className="text-xs text-muted-foreground truncate">{rec.description}</p>
+                  </div>
+                  <Badge variant="outline" className={getPriorityColor(rec.priority)}>
+                    {rec.priority === 'high' ? 'Ưu tiên' : rec.priority === 'medium' ? 'Nên làm' : 'Tùy chọn'}
+                  </Badge>
+                  <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-sm text-muted-foreground">Chưa có dữ liệu gợi ý</p>
+              <Button variant="ghost" size="sm" className="mt-2" onClick={fetchSmartRecommendations}>
+                Tạo gợi ý
+              </Button>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
