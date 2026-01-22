@@ -16,6 +16,7 @@ import { useAchievements } from '@/hooks/useAchievements';
 import { WishlistButton } from '@/components/course/WishlistButton';
 import { useWishlist } from '@/hooks/useWishlist';
 import { PracticeTodayWidget } from '@/components/dashboard/PracticeTodayWidget';
+import { PracticeStatsWidget } from '@/components/dashboard/PracticeStatsWidget';
 import { 
   BookOpen, 
   FileText, 
@@ -584,9 +585,10 @@ const StudentDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Practice Today Widget (includes Smart Recommendations) */}
-        <div className="mb-8">
+        {/* Practice Widgets Row */}
+        <div className="grid lg:grid-cols-2 gap-6 mb-8">
           <PracticeTodayWidget />
+          <PracticeStatsWidget />
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
