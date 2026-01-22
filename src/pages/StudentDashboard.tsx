@@ -412,7 +412,7 @@ const StudentDashboard = () => {
             </CardContent>
           </Card>
 
-          <Link to="/courses">
+          <Link to="/my-courses">
             <Card className="border-border/50 col-span-1 hover:border-primary/50 hover:shadow-md transition-all cursor-pointer group h-full">
               <CardContent className="p-4">
                 <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center mb-3 group-hover:bg-blue-500/20 transition-colors">
