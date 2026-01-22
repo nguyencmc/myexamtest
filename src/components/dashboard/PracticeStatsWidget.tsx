@@ -11,13 +11,11 @@ import { vi } from 'date-fns/locale';
 import { 
   BarChart3, 
   Target, 
-  Clock, 
-  Eye, 
   BookOpen,
   TrendingUp,
-  Award,
   RefreshCw,
-  LogIn
+  LogIn,
+  ChevronRight
 } from 'lucide-react';
 
 export const PracticeStatsWidget = () => {
@@ -144,58 +142,28 @@ export const PracticeStatsWidget = () => {
               </div>
             </div>
 
-            {/* B) Recent Exams */}
-            <div>
-              <h4 className="font-medium text-foreground flex items-center gap-2 mb-3">
-                <TrendingUp className="w-4 h-4" />
-                Bài thi gần đây
-              </h4>
-              
-              {stats.recentExams.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  Chưa có bài thi nào hoàn thành
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {stats.recentExams.map((exam) => (
-                    <div 
-                      key={exam.id}
-                      className="flex items-center gap-3 p-3 rounded-lg border border-border/50 hover:bg-accent/5 transition-colors"
-                    >
-                      <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
-                        <Award className="w-4 h-4 text-green-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">
-                          {exam.set_title || 'Bài thi'}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {exam.submitted_at && format(new Date(exam.submitted_at), 'dd/MM/yyyy HH:mm', { locale: vi })}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <Badge 
-                          variant={exam.score >= 70 ? 'default' : 'secondary'}
-                          className="mb-1"
-                        >
-                          {exam.correct}/{exam.total}
-                        </Badge>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1 justify-end">
-                          <Clock className="w-3 h-3" />
-                          {formatDuration(exam.duration_sec)}
-                        </p>
-                      </div>
-                      <Link to={`/practice/result/${exam.id}`}>
-                        <Button variant="ghost" size="sm" className="gap-1">
-                          <Eye className="w-4 h-4" />
-                          Xem lại
-                        </Button>
-                      </Link>
-                    </div>
-                  ))}
+            {/* B) Link to Exam History */}
+            <Link to="/history" className="block">
+              <div className="p-4 rounded-lg border border-border/50 hover:border-primary/50 hover:bg-accent/5 transition-all cursor-pointer group">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
+                    <TrendingUp className="w-5 h-5 text-purple-500" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-foreground group-hover:text-primary transition-colors">
+                      Lịch sử làm bài
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      {stats.recentExams.length > 0 
+                        ? `${stats.recentExams.length} bài thi gần đây`
+                        : 'Xem các bài thi đã làm'
+                      }
+                    </p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
-              )}
-            </div>
+              </div>
+            </Link>
 
             {/* C) Most Practiced Set */}
             {stats.mostPracticedSet && (
