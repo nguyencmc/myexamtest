@@ -380,15 +380,17 @@ const StudentDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-border/50 col-span-1">
-            <CardContent className="p-4">
-              <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center mb-3">
-                <FileText className="w-5 h-5 text-purple-500" />
-              </div>
-              <p className="text-2xl font-bold text-foreground">{stats.totalExamsTaken}</p>
-              <p className="text-sm text-muted-foreground">Đề thi đã làm</p>
-            </CardContent>
-          </Card>
+          <Link to="/history">
+            <Card className="border-border/50 col-span-1 hover:border-primary/50 hover:shadow-md transition-all cursor-pointer group">
+              <CardContent className="p-4">
+                <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center mb-3 group-hover:bg-purple-500/20 transition-colors">
+                  <FileText className="w-5 h-5 text-purple-500" />
+                </div>
+                <p className="text-2xl font-bold text-foreground">{stats.totalExamsTaken}</p>
+                <p className="text-sm text-muted-foreground group-hover:text-primary transition-colors">Đề thi đã làm</p>
+              </CardContent>
+            </Card>
+          </Link>
 
           <Card className="border-border/50 col-span-1">
             <CardContent className="p-4">
