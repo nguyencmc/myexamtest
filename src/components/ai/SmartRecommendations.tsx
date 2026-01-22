@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Sparkles, BookOpen, Brain, Target, TrendingUp, ArrowRight } from 'lucide-react';
+import { Loader2, Sparkles, BookOpen, Brain, Target, TrendingUp, ArrowRight, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { formatDistanceToNow } from 'date-fns';
+import { vi } from 'date-fns/locale';
 
 interface Recommendation {
   type: 'exam' | 'flashcard' | 'practice' | 'review';
@@ -24,14 +26,53 @@ interface SmartRecommendationsData {
   suggestedDifficulty: 'easy' | 'medium' | 'hard';
 }
 
+// Check if date is today
+const isToday = (dateStr: string) => {
+  const date = new Date(dateStr);
+  const today = new Date();
+  return date.toDateString() === today.toDateString();
+};
+
 export const SmartRecommendations: React.FC = () => {
   const [data, setData] = useState<SmartRecommendationsData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const fetchRecommendations = async () => {
+  // Load cached recommendations or fetch new ones if first login today
+  const loadRecommendations = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      // Check for cached recommendations
+      const { data: cached } = await supabase
+        .from('user_smart_recommendations')
+        .select('recommendations, generated_at')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (cached && isToday(cached.generated_at)) {
+        // Use cached data if generated today
+        setData(cached.recommendations as unknown as SmartRecommendationsData);
+        setLastUpdated(cached.generated_at);
+        setIsLoading(false);
+        return;
+      }
+
+      // First login today - generate new recommendations
+      await generateNewRecommendations();
+    } catch (error) {
+      console.error('Load recommendations error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Generate new AI recommendations and cache them
+  const generateNewRecommendations = async () => {
     if (!user) return;
     
     setIsLoading(true);
@@ -42,6 +83,24 @@ export const SmartRecommendations: React.FC = () => {
 
       if (error) throw error;
       setData(result);
+      
+      // Cache the recommendations
+      const now = new Date().toISOString();
+      const { error: upsertError } = await supabase
+        .from('user_smart_recommendations')
+        .upsert({
+          user_id: user.id,
+          recommendations: result,
+          generated_at: now,
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (upsertError) {
+        console.error('Cache recommendations error:', upsertError);
+      } else {
+        setLastUpdated(now);
+      }
     } catch (error) {
       console.error('Smart recommendations error:', error);
       toast({
@@ -54,9 +113,18 @@ export const SmartRecommendations: React.FC = () => {
     }
   };
 
+  // Manual refresh handler
+  const handleManualRefresh = async () => {
+    await generateNewRecommendations();
+    toast({
+      title: 'Đã cập nhật',
+      description: 'Gợi ý học tập đã được làm mới',
+    });
+  };
+
   useEffect(() => {
     if (user) {
-      fetchRecommendations();
+      loadRecommendations();
     }
   }, [user]);
 
@@ -112,17 +180,24 @@ export const SmartRecommendations: React.FC = () => {
               <Sparkles className="w-5 h-5 text-primary" />
               Gợi ý học tập thông minh
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="flex items-center gap-2">
               AI phân tích và đưa ra gợi ý dựa trên tiến độ của bạn
+              {lastUpdated && (
+                <span className="text-xs">
+                  • Cập nhật {formatDistanceToNow(new Date(lastUpdated), { addSuffix: true, locale: vi })}
+                </span>
+              )}
             </CardDescription>
           </div>
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={fetchRecommendations}
+            onClick={handleManualRefresh}
             disabled={isLoading}
+            className="gap-2"
           >
-            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Làm mới'}
+            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+            Làm mới
           </Button>
         </div>
       </CardHeader>
@@ -200,7 +275,7 @@ export const SmartRecommendations: React.FC = () => {
           <div className="text-center py-8">
             <Sparkles className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
             <p className="text-muted-foreground">Chưa có dữ liệu gợi ý</p>
-            <Button variant="outline" className="mt-4" onClick={fetchRecommendations}>
+            <Button variant="outline" className="mt-4" onClick={generateNewRecommendations}>
               Tạo gợi ý
             </Button>
           </div>
