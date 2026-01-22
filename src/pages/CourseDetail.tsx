@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { CourseReviews } from "@/components/course/CourseReviews";
 import { VideoPreviewModal } from "@/components/course/VideoPreviewModal";
+import { CoursePracticeSection } from "@/components/course/CoursePracticeSection";
 import {
   Play,
   PlayCircle,
@@ -586,6 +587,9 @@ const CourseDetail = () => {
                 </div>
               </div>
             </div>
+
+            {/* Practice Section */}
+            <CoursePracticeSection courseId={course.id} />
 
             {/* Reviews Section */}
             <CourseReviews 
