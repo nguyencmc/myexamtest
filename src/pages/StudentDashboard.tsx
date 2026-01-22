@@ -349,7 +349,7 @@ const StudentDashboard = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <Card className="border-border/50 col-span-1">
             <CardContent className="p-4">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
@@ -381,7 +381,7 @@ const StudentDashboard = () => {
           </Card>
 
           <Link to="/history">
-            <Card className="border-border/50 col-span-1 hover:border-primary/50 hover:shadow-md transition-all cursor-pointer group">
+            <Card className="border-border/50 col-span-1 hover:border-primary/50 hover:shadow-md transition-all cursor-pointer group h-full">
               <CardContent className="p-4">
                 <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center mb-3 group-hover:bg-purple-500/20 transition-colors">
                   <FileText className="w-5 h-5 text-purple-500" />
@@ -411,6 +411,30 @@ const StudentDashboard = () => {
               <p className="text-sm text-muted-foreground">Flashcard đã nhớ</p>
             </CardContent>
           </Card>
+
+          <Link to="/courses">
+            <Card className="border-border/50 col-span-1 hover:border-primary/50 hover:shadow-md transition-all cursor-pointer group h-full">
+              <CardContent className="p-4">
+                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center mb-3 group-hover:bg-blue-500/20 transition-colors">
+                  <GraduationCap className="w-5 h-5 text-blue-500" />
+                </div>
+                <p className="text-2xl font-bold text-foreground">{enrolledCourses.length}</p>
+                <p className="text-sm text-muted-foreground group-hover:text-primary transition-colors">Khóa học của tôi</p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to="/podcasts">
+            <Card className="border-border/50 col-span-1 hover:border-primary/50 hover:shadow-md transition-all cursor-pointer group h-full">
+              <CardContent className="p-4">
+                <div className="w-10 h-10 rounded-lg bg-pink-500/10 flex items-center justify-center mb-3 group-hover:bg-pink-500/20 transition-colors">
+                  <Headphones className="w-5 h-5 text-pink-500" />
+                </div>
+                <p className="text-2xl font-bold text-foreground">Podcast</p>
+                <p className="text-sm text-muted-foreground group-hover:text-primary transition-colors">Luyện nghe</p>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
 
         {/* My Courses Section */}
