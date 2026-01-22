@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { SmartRecommendations } from '@/components/ai/SmartRecommendations';
+
 import { AITutorButton } from '@/components/ai/AITutorButton';
 import { AchievementsBadgeDisplay } from '@/components/achievements/AchievementsBadgeDisplay';
 import { useAchievements } from '@/hooks/useAchievements';
@@ -584,14 +584,9 @@ const StudentDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Practice Today Widget */}
+        {/* Practice Today Widget (includes Smart Recommendations) */}
         <div className="mb-8">
           <PracticeTodayWidget />
-        </div>
-
-        {/* Smart Recommendations */}
-        <div className="mb-8">
-          <SmartRecommendations />
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
