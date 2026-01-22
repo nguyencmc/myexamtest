@@ -248,6 +248,7 @@ export type Database = {
           content: string | null
           cover_url: string | null
           created_at: string
+          creator_id: string | null
           description: string | null
           difficulty: string | null
           id: string
@@ -265,6 +266,7 @@ export type Database = {
           content?: string | null
           cover_url?: string | null
           created_at?: string
+          creator_id?: string | null
           description?: string | null
           difficulty?: string | null
           id?: string
@@ -282,6 +284,7 @@ export type Database = {
           content?: string | null
           cover_url?: string | null
           created_at?: string
+          creator_id?: string | null
           description?: string | null
           difficulty?: string | null
           id?: string
@@ -990,6 +993,7 @@ export type Database = {
           attempt_count: number | null
           category_id: string | null
           created_at: string
+          creator_id: string | null
           description: string | null
           difficulty: string | null
           duration_minutes: number | null
@@ -1005,6 +1009,7 @@ export type Database = {
           attempt_count?: number | null
           category_id?: string | null
           created_at?: string
+          creator_id?: string | null
           description?: string | null
           difficulty?: string | null
           duration_minutes?: number | null
@@ -1020,6 +1025,7 @@ export type Database = {
           attempt_count?: number | null
           category_id?: string | null
           created_at?: string
+          creator_id?: string | null
           description?: string | null
           difficulty?: string | null
           duration_minutes?: number | null
@@ -1345,6 +1351,7 @@ export type Database = {
           audio_url: string | null
           category_id: string | null
           created_at: string
+          creator_id: string | null
           description: string | null
           difficulty: string | null
           duration_seconds: number | null
@@ -1363,6 +1370,7 @@ export type Database = {
           audio_url?: string | null
           category_id?: string | null
           created_at?: string
+          creator_id?: string | null
           description?: string | null
           difficulty?: string | null
           duration_seconds?: number | null
@@ -1381,6 +1389,7 @@ export type Database = {
           audio_url?: string | null
           category_id?: string | null
           created_at?: string
+          creator_id?: string | null
           description?: string | null
           difficulty?: string | null
           duration_seconds?: number | null
@@ -1611,6 +1620,7 @@ export type Database = {
         Row: {
           course_id: string | null
           created_at: string
+          creator_id: string | null
           description: string | null
           id: string
           is_published: boolean | null
@@ -1623,6 +1633,7 @@ export type Database = {
         Insert: {
           course_id?: string | null
           created_at?: string
+          creator_id?: string | null
           description?: string | null
           id?: string
           is_published?: boolean | null
@@ -1635,6 +1646,7 @@ export type Database = {
         Update: {
           course_id?: string | null
           created_at?: string
+          creator_id?: string | null
           description?: string | null
           id?: string
           is_published?: boolean | null
@@ -1658,6 +1670,7 @@ export type Database = {
         Row: {
           correct_answer: string
           created_at: string
+          creator_id: string | null
           exam_id: string | null
           explanation: string | null
           id: string
@@ -1675,6 +1688,7 @@ export type Database = {
         Insert: {
           correct_answer: string
           created_at?: string
+          creator_id?: string | null
           exam_id?: string | null
           explanation?: string | null
           id?: string
@@ -1692,6 +1706,7 @@ export type Database = {
         Update: {
           correct_answer?: string
           created_at?: string
+          creator_id?: string | null
           exam_id?: string | null
           explanation?: string | null
           id?: string

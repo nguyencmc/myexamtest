@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
@@ -56,6 +57,7 @@ interface PodcastCategory {
 
 const PodcastManagement = () => {
   const { isAdmin, isTeacher, loading: roleLoading } = useUserRole();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -78,16 +80,22 @@ const PodcastManagement = () => {
   }, [hasAccess, roleLoading, navigate, toast]);
 
   useEffect(() => {
-    if (hasAccess) {
+    if (hasAccess && user) {
       fetchData();
     }
-  }, [hasAccess]);
+  }, [hasAccess, user]);
 
   const fetchData = async () => {
     setLoading(true);
     
+    // Admin sees all podcasts, Teacher sees only their own
+    let podcastsQuery = supabase.from('podcasts').select('*').order('created_at', { ascending: false });
+    if (isTeacher && !isAdmin) {
+      podcastsQuery = podcastsQuery.eq('creator_id', user?.id);
+    }
+    
     const [{ data: podcastsData }, { data: categoriesData }] = await Promise.all([
-      supabase.from('podcasts').select('*').order('created_at', { ascending: false }),
+      podcastsQuery,
       supabase.from('podcast_categories').select('id, name'),
     ]);
 

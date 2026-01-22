@@ -60,6 +60,7 @@ interface ExamCategory {
 
 const ExamManagement = () => {
   const { isAdmin, isTeacher, loading: roleLoading } = useUserRole();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -82,16 +83,22 @@ const ExamManagement = () => {
   }, [hasAccess, roleLoading, navigate, toast]);
 
   useEffect(() => {
-    if (hasAccess) {
+    if (hasAccess && user) {
       fetchData();
     }
-  }, [hasAccess]);
+  }, [hasAccess, user]);
 
   const fetchData = async () => {
     setLoading(true);
     
+    // Admin sees all exams, Teacher sees only their own
+    let examsQuery = supabase.from('exams').select('*').order('created_at', { ascending: false });
+    if (isTeacher && !isAdmin) {
+      examsQuery = examsQuery.eq('creator_id', user?.id);
+    }
+    
     const [{ data: examsData }, { data: categoriesData }] = await Promise.all([
-      supabase.from('exams').select('*').order('created_at', { ascending: false }),
+      examsQuery,
       supabase.from('exam_categories').select('id, name, slug'),
     ]);
 
