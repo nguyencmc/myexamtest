@@ -15,10 +15,7 @@ export function FlashcardFlip({ front, back, hint, isFlipped, onFlip }: Flashcar
   return (
     <div className="w-full max-w-2xl mx-auto">
       <div
-        className={cn(
-          "relative w-full aspect-[3/2] cursor-pointer perspective-1000",
-          "transition-transform duration-500"
-        )}
+        className="relative w-full aspect-[3/2] cursor-pointer perspective-1000"
         onClick={onFlip}
       >
         <div
