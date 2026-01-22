@@ -28,13 +28,14 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { DueBadge } from '../components/DueBadge';
+import { AIFlashcardGenerator } from '../components/AIFlashcardGenerator';
 import {
   ArrowLeft,
   Plus,
   Play,
   Trash2,
-  Edit,
   Layers,
+  Sparkles,
 } from 'lucide-react';
 
 export default function DeckDetailPage() {
@@ -43,6 +44,7 @@ export default function DeckDetailPage() {
   const { deck, cards, isLoading, createCard, deleteCard, isCreatingCard } = useDeckDetail(deckId!);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAIDialogOpen, setIsAIDialogOpen] = useState(false);
   const [newFront, setNewFront] = useState('');
   const [newBack, setNewBack] = useState('');
   const [newHint, setNewHint] = useState('');
@@ -64,6 +66,21 @@ export default function DeckDetailPage() {
         },
       }
     );
+  };
+
+  const handleAICardsGenerated = async (cards: { front: string; back: string; hint?: string }[]) => {
+    // Create cards one by one
+    for (const card of cards) {
+      await createCard(
+        {
+          front: card.front,
+          back: card.back,
+          hint: card.hint,
+        },
+        { onSuccess: () => {} }
+      );
+    }
+    setIsAIDialogOpen(false);
   };
 
   if (isLoading) {
@@ -127,7 +144,7 @@ export default function DeckDetailPage() {
               </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 flex-wrap">
               {cards.length > 0 && (
                 <Link to={`/flashcards/study/${deck.id}`}>
                   <Button className="gap-2">
@@ -136,12 +153,35 @@ export default function DeckDetailPage() {
                   </Button>
                 </Link>
               )}
+
+              {/* AI Generate Button */}
+              <Dialog open={isAIDialogOpen} onOpenChange={setIsAIDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="gap-2 border-primary/30 text-primary hover:bg-primary/10">
+                    <Sparkles className="w-4 h-4" />
+                    Tạo bằng AI
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-primary" />
+                      Tạo Flashcard bằng AI
+                    </DialogTitle>
+                  </DialogHeader>
+                  <AIFlashcardGenerator
+                    onCardsGenerated={handleAICardsGenerated}
+                    onClose={() => setIsAIDialogOpen(false)}
+                  />
+                </DialogContent>
+              </Dialog>
               
+              {/* Manual Add Button */}
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline" className="gap-2">
                     <Plus className="w-4 h-4" />
-                    Thêm thẻ
+                    Thêm thủ công
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-lg">
