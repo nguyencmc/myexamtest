@@ -1269,6 +1269,41 @@ export type Database = {
           },
         ]
       }
+      podcast_bookmarks: {
+        Row: {
+          created_at: string
+          id: string
+          label: string | null
+          podcast_id: string
+          time_seconds: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          podcast_id: string
+          time_seconds: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          podcast_id?: string
+          time_seconds?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "podcast_bookmarks_podcast_id_fkey"
+            columns: ["podcast_id"]
+            isOneToOne: false
+            referencedRelation: "podcasts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       podcast_categories: {
         Row: {
           created_at: string
@@ -2071,6 +2106,47 @@ export type Database = {
             columns: ["deck_id"]
             isOneToOne: false
             referencedRelation: "flashcard_decks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_podcast_progress: {
+        Row: {
+          completed: boolean | null
+          created_at: string
+          current_time_seconds: number
+          id: string
+          last_played_at: string | null
+          podcast_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string
+          current_time_seconds?: number
+          id?: string
+          last_played_at?: string | null
+          podcast_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string
+          current_time_seconds?: number
+          id?: string
+          last_played_at?: string | null
+          podcast_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_podcast_progress_podcast_id_fkey"
+            columns: ["podcast_id"]
+            isOneToOne: false
+            referencedRelation: "podcasts"
             referencedColumns: ["id"]
           },
         ]
