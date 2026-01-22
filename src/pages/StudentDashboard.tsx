@@ -15,6 +15,7 @@ import { AchievementsBadgeDisplay } from '@/components/achievements/Achievements
 import { useAchievements } from '@/hooks/useAchievements';
 import { WishlistButton } from '@/components/course/WishlistButton';
 import { useWishlist } from '@/hooks/useWishlist';
+import { PracticeTodayWidget } from '@/components/dashboard/PracticeTodayWidget';
 import { 
   BookOpen, 
   FileText, 
@@ -582,6 +583,11 @@ const StudentDashboard = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Practice Today Widget */}
+        <div className="mb-8">
+          <PracticeTodayWidget />
+        </div>
 
         {/* Smart Recommendations */}
         <div className="mb-8">
