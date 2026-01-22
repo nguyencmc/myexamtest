@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { SyncedTranscript } from "@/components/podcast/SyncedTranscript";
 import { ABRepeatControl } from "@/components/podcast/ABRepeatControl";
 import { BookmarksList } from "@/components/podcast/BookmarksList";
+import { TranscriptFlashcardGenerator } from "@/components/podcast/TranscriptFlashcardGenerator";
 import { usePodcastProgress } from "@/hooks/usePodcastProgress";
 import { usePodcastBookmarks } from "@/hooks/usePodcastBookmarks";
 import { useMiniPlayer } from "@/contexts/MiniPlayerContext";
@@ -630,29 +631,37 @@ const PodcastDetail = () => {
 
                 {/* Synced Transcript Section */}
                 <div className="mt-6">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                     <h3 className="text-lg font-semibold flex items-center gap-2">
                       <FileText className="w-5 h-5" />
                       Transcript
                     </h3>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowTranscript(!showTranscript)}
-                      className="text-white/70 hover:text-white hover:bg-white/10"
-                    >
-                      {showTranscript ? (
-                        <>
-                          <ChevronUp className="w-4 h-4 mr-1" />
-                          Thu gọn
-                        </>
-                      ) : (
-                        <>
-                          <ChevronDown className="w-4 h-4 mr-1" />
-                          Mở rộng
-                        </>
+                    <div className="flex items-center gap-2">
+                      {podcast.transcript && (
+                        <TranscriptFlashcardGenerator
+                          transcript={podcast.transcript}
+                          podcastTitle={podcast.title}
+                        />
                       )}
-                    </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowTranscript(!showTranscript)}
+                        className="text-white/70 hover:text-white hover:bg-white/10"
+                      >
+                        {showTranscript ? (
+                          <>
+                            <ChevronUp className="w-4 h-4 mr-1" />
+                            Thu gọn
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="w-4 h-4 mr-1" />
+                            Mở rộng
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </div>
 
                   {showTranscript && (
