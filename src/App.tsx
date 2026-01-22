@@ -4,13 +4,14 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { MiniPlayerProvider } from "@/contexts/MiniPlayerContext";
+import { MiniPlayer } from "@/components/podcast/MiniPlayer";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Courses from "./pages/Courses";
 import CourseDetail from "./pages/CourseDetail";
 import CourseViewer from "./pages/CourseViewer";
 import Exams from "./pages/Exams";
-import Flashcards from "./pages/Flashcards";
 import Podcasts from "./pages/Podcasts";
 import PodcastDetail from "./pages/PodcastDetail";
 import Books from "./pages/Books";
@@ -70,78 +71,81 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/courses" element={<Courses />} />
-            <Route path="/course/:id" element={<CourseDetail />} />
-            <Route path="/course/:id/learn" element={<CourseViewer />} />
-            {/* Old flashcards route removed - now using DeckListPage at /flashcards */}
-            <Route path="/podcasts" element={<Podcasts />} />
-            <Route path="/podcast/:slug" element={<PodcastDetail />} />
-            <Route path="/exams" element={<Exams />} />
-            <Route path="/exams/:slug" element={<ExamCategoryDetail />} />
-            <Route path="/books" element={<Books />} />
-            <Route path="/book/:slug" element={<BookDetail />} />
-            <Route path="/book/:slug/read" element={<BookReader />} />
-            <Route path="/exam/:slug" element={<ExamDetail />} />
-            <Route path="/exam/:slug/take" element={<ExamTaking />} />
-            <Route path="/history" element={<ExamHistory />} />
-            <Route path="/history/:attemptId" element={<AttemptDetail />} />
-            <Route path="/leaderboard" element={<Leaderboard />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/dashboard" element={<StudentDashboard />} />
-            <Route path="/my-courses" element={<MyCourses />} />
-            <Route path="/achievements" element={<Achievements />} />
-            <Route path="/study-groups" element={<StudyGroups />} />
-            <Route path="/study-groups/:groupId" element={<StudyGroupDetail />} />
-            <Route path="/@:username" element={<UserProfile />} />
-            <Route path="/verify-certificate/:certificateNumber" element={<VerifyCertificate />} />
-            <Route path="/instructor/:instructorId" element={<InstructorProfile />} />
-            
-            {/* Practice feature routes */}
-            <Route path="/practice" element={<QuestionBankPage />} />
-            <Route path="/practice/setup/:setId" element={<PracticeSetup />} />
-            <Route path="/practice/run/:setId" element={<PracticeRunner />} />
-            <Route path="/practice/exam-setup/:setId" element={<ExamSetup />} />
-            <Route path="/practice/exam/:setId" element={<ExamRunner />} />
-            <Route path="/practice/result/:sessionId" element={<ExamResult />} />
-            <Route path="/practice/review" element={<ReviewWrongRunner />} />
-            
-            {/* Flashcards feature routes */}
-            <Route path="/flashcards" element={<DeckListPage />} />
-            <Route path="/flashcards/decks/:deckId" element={<DeckDetailPage />} />
-            <Route path="/flashcards/study/:deckId" element={<StudyDeckPage />} />
-            <Route path="/flashcards/today" element={<TodayPage />} />
-            
-            {/* Admin & Teacher routes */}
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/teacher" element={<TeacherDashboard />} />
-            <Route path="/admin/users" element={<UserManagement />} />
-            <Route path="/admin/categories" element={<CategoryManagement />} />
-            <Route path="/admin/exams" element={<ExamManagement />} />
-            <Route path="/admin/exams/create" element={<ExamEditor />} />
-            <Route path="/admin/exams/:id" element={<ExamEditor />} />
-            <Route path="/admin/flashcards" element={<FlashcardManagement />} />
-            <Route path="/admin/flashcards/create" element={<FlashcardEditor />} />
-            <Route path="/admin/flashcards/:id" element={<FlashcardEditor />} />
-            <Route path="/admin/podcasts" element={<PodcastManagement />} />
-            <Route path="/admin/podcasts/create" element={<PodcastEditor />} />
-            <Route path="/admin/podcasts/:id" element={<PodcastEditor />} />
-            <Route path="/admin/courses" element={<CourseManagement />} />
-            <Route path="/admin/courses/create" element={<CourseEditor />} />
-            <Route path="/admin/courses/:id" element={<CourseEditor />} />
-            <Route path="/admin/question-sets" element={<QuestionSetManagement />} />
-            <Route path="/admin/question-sets/create" element={<QuestionSetEditor />} />
-            <Route path="/admin/question-sets/:id" element={<QuestionSetEditor />} />
-            
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <MiniPlayerProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/courses" element={<Courses />} />
+              <Route path="/course/:id" element={<CourseDetail />} />
+              <Route path="/course/:id/learn" element={<CourseViewer />} />
+              {/* Old flashcards route removed - now using DeckListPage at /flashcards */}
+              <Route path="/podcasts" element={<Podcasts />} />
+              <Route path="/podcast/:slug" element={<PodcastDetail />} />
+              <Route path="/exams" element={<Exams />} />
+              <Route path="/exams/:slug" element={<ExamCategoryDetail />} />
+              <Route path="/books" element={<Books />} />
+              <Route path="/book/:slug" element={<BookDetail />} />
+              <Route path="/book/:slug/read" element={<BookReader />} />
+              <Route path="/exam/:slug" element={<ExamDetail />} />
+              <Route path="/exam/:slug/take" element={<ExamTaking />} />
+              <Route path="/history" element={<ExamHistory />} />
+              <Route path="/history/:attemptId" element={<AttemptDetail />} />
+              <Route path="/leaderboard" element={<Leaderboard />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/dashboard" element={<StudentDashboard />} />
+              <Route path="/my-courses" element={<MyCourses />} />
+              <Route path="/achievements" element={<Achievements />} />
+              <Route path="/study-groups" element={<StudyGroups />} />
+              <Route path="/study-groups/:groupId" element={<StudyGroupDetail />} />
+              <Route path="/@:username" element={<UserProfile />} />
+              <Route path="/verify-certificate/:certificateNumber" element={<VerifyCertificate />} />
+              <Route path="/instructor/:instructorId" element={<InstructorProfile />} />
+              
+              {/* Practice feature routes */}
+              <Route path="/practice" element={<QuestionBankPage />} />
+              <Route path="/practice/setup/:setId" element={<PracticeSetup />} />
+              <Route path="/practice/run/:setId" element={<PracticeRunner />} />
+              <Route path="/practice/exam-setup/:setId" element={<ExamSetup />} />
+              <Route path="/practice/exam/:setId" element={<ExamRunner />} />
+              <Route path="/practice/result/:sessionId" element={<ExamResult />} />
+              <Route path="/practice/review" element={<ReviewWrongRunner />} />
+              
+              {/* Flashcards feature routes */}
+              <Route path="/flashcards" element={<DeckListPage />} />
+              <Route path="/flashcards/decks/:deckId" element={<DeckDetailPage />} />
+              <Route path="/flashcards/study/:deckId" element={<StudyDeckPage />} />
+              <Route path="/flashcards/today" element={<TodayPage />} />
+              
+              {/* Admin & Teacher routes */}
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/teacher" element={<TeacherDashboard />} />
+              <Route path="/admin/users" element={<UserManagement />} />
+              <Route path="/admin/categories" element={<CategoryManagement />} />
+              <Route path="/admin/exams" element={<ExamManagement />} />
+              <Route path="/admin/exams/create" element={<ExamEditor />} />
+              <Route path="/admin/exams/:id" element={<ExamEditor />} />
+              <Route path="/admin/flashcards" element={<FlashcardManagement />} />
+              <Route path="/admin/flashcards/create" element={<FlashcardEditor />} />
+              <Route path="/admin/flashcards/:id" element={<FlashcardEditor />} />
+              <Route path="/admin/podcasts" element={<PodcastManagement />} />
+              <Route path="/admin/podcasts/create" element={<PodcastEditor />} />
+              <Route path="/admin/podcasts/:id" element={<PodcastEditor />} />
+              <Route path="/admin/courses" element={<CourseManagement />} />
+              <Route path="/admin/courses/create" element={<CourseEditor />} />
+              <Route path="/admin/courses/:id" element={<CourseEditor />} />
+              <Route path="/admin/question-sets" element={<QuestionSetManagement />} />
+              <Route path="/admin/question-sets/create" element={<QuestionSetEditor />} />
+              <Route path="/admin/question-sets/:id" element={<QuestionSetEditor />} />
+              
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <MiniPlayer />
+          </BrowserRouter>
+        </MiniPlayerProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>

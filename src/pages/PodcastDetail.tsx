@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { SyncedTranscript } from "@/components/podcast/SyncedTranscript";
+import { ABRepeatControl } from "@/components/podcast/ABRepeatControl";
+import { BookmarksList } from "@/components/podcast/BookmarksList";
+import { usePodcastProgress } from "@/hooks/usePodcastProgress";
+import { usePodcastBookmarks } from "@/hooks/usePodcastBookmarks";
+import { useMiniPlayer } from "@/contexts/MiniPlayerContext";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Play,
   Pause,
@@ -20,14 +26,14 @@ import {
   Clock,
   User,
   Repeat,
-  Shuffle,
-  Download,
-  Share2,
   Heart,
+  Share2,
   FileText,
   ChevronDown,
   ChevronUp,
-  Gauge
+  Gauge,
+  Bookmark,
+  ExternalLink,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -35,6 +41,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { useToast } from "@/hooks/use-toast";
 
 interface Podcast {
   id: string;
@@ -74,9 +86,14 @@ const difficultyLabels: Record<string, { label: string; color: string }> = {
   advanced: { label: "Nâng cao", color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
 };
 
+const playbackRates = [0.5, 0.75, 1, 1.25, 1.5, 2];
+
 const PodcastDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const audioRef = useRef<HTMLAudioElement>(null);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const miniPlayer = useMiniPlayer();
   
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -86,8 +103,12 @@ const PodcastDetail = () => {
   const [isRepeat, setIsRepeat] = useState(false);
   const [showTranscript, setShowTranscript] = useState(true);
   const [playbackRate, setPlaybackRate] = useState(1);
-
-  const playbackRates = [0.5, 0.75, 1, 1.25, 1.5, 2];
+  const [showBookmarks, setShowBookmarks] = useState(false);
+  
+  // A-B Repeat state
+  const [pointA, setPointA] = useState<number | null>(null);
+  const [pointB, setPointB] = useState<number | null>(null);
+  const abRepeatActive = pointA !== null && pointB !== null;
 
   // Fetch podcast
   const { data: podcast, isLoading } = useQuery({
@@ -102,6 +123,25 @@ const PodcastDetail = () => {
       return data as Podcast | null;
     },
   });
+
+  // Hooks for progress and bookmarks
+  const { saveProgress } = usePodcastProgress({
+    podcastId: podcast?.id || "",
+    currentTime,
+    duration,
+    onLoadProgress: useCallback((time: number) => {
+      if (audioRef.current && time > 0) {
+        audioRef.current.currentTime = time;
+        setCurrentTime(time);
+        toast({
+          title: "Tiếp tục nghe",
+          description: `Tiếp tục từ ${formatTime(time)}`,
+        });
+      }
+    }, [toast]),
+  });
+
+  const { bookmarks, addBookmark, removeBookmark } = usePodcastBookmarks(podcast?.id || "");
 
   // Fetch category
   const { data: category } = useQuery({
@@ -136,11 +176,21 @@ const PodcastDetail = () => {
     enabled: !!podcast?.category_id,
   });
 
+  // Audio event handlers
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
+    const handleTimeUpdate = () => {
+      const time = audio.currentTime;
+      setCurrentTime(time);
+      
+      // Handle A-B repeat
+      if (abRepeatActive && pointB !== null && time >= pointB) {
+        audio.currentTime = pointA!;
+      }
+    };
+    
     const handleLoadedMetadata = () => setDuration(audio.duration);
     const handleEnded = () => {
       if (isRepeat) {
@@ -160,7 +210,7 @@ const PodcastDetail = () => {
       audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
       audio.removeEventListener("ended", handleEnded);
     };
-  }, [isRepeat]);
+  }, [isRepeat, abRepeatActive, pointA, pointB]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -216,6 +266,54 @@ const PodcastDetail = () => {
     if (pod.title.toLowerCase().includes("toeic")) return podcastThumbnails.toeic;
     if (pod.title.toLowerCase().includes("ielts")) return podcastThumbnails.ielts;
     return podcastThumbnails.default;
+  };
+
+  // A-B Repeat handlers
+  const handleSetPointA = () => {
+    setPointA(currentTime);
+    setPointB(null);
+    toast({ title: "Đã đặt điểm A", description: formatTime(currentTime) });
+  };
+
+  const handleSetPointB = () => {
+    if (pointA !== null && currentTime > pointA) {
+      setPointB(currentTime);
+      toast({ title: "A-B Repeat bật", description: `${formatTime(pointA)} → ${formatTime(currentTime)}` });
+    }
+  };
+
+  const clearABRepeat = () => {
+    setPointA(null);
+    setPointB(null);
+    toast({ title: "Đã tắt A-B Repeat" });
+  };
+
+  // Send to mini player
+  const handleSendToMiniPlayer = () => {
+    if (!podcast) return;
+    
+    // Pause current
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+    setIsPlaying(false);
+    
+    miniPlayer.setCurrentPodcast({
+      id: podcast.id,
+      title: podcast.title,
+      slug: podcast.slug,
+      thumbnail_url: podcast.thumbnail_url,
+      audio_url: podcast.audio_url || sampleAudioUrl,
+      host_name: podcast.host_name,
+    });
+    
+    // Seek to current time and play
+    setTimeout(() => {
+      miniPlayer.seek(currentTime);
+      miniPlayer.play();
+    }, 100);
+    
+    toast({ title: "Đang phát ở Mini Player" });
   };
 
   if (isLoading) {
@@ -330,9 +428,14 @@ const PodcastDetail = () => {
                         <Share2 className="w-4 h-4 mr-2" />
                         Chia sẻ
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10">
-                        <Download className="w-4 h-4 mr-2" />
-                        Tải xuống
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-white/70 hover:text-white hover:bg-white/10"
+                        onClick={handleSendToMiniPlayer}
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Mini Player
                       </Button>
                     </div>
                   </div>
@@ -343,7 +446,29 @@ const PodcastDetail = () => {
                   <audio ref={audioRef} src={podcast.audio_url || sampleAudioUrl} />
                   
                   {/* Progress Bar */}
-                  <div className="mb-4">
+                  <div className="mb-4 relative">
+                    {/* A-B markers */}
+                    {pointA !== null && duration > 0 && (
+                      <div
+                        className="absolute top-0 h-full w-0.5 bg-green-500 z-10"
+                        style={{ left: `${(pointA / duration) * 100}%` }}
+                      />
+                    )}
+                    {pointB !== null && duration > 0 && (
+                      <div
+                        className="absolute top-0 h-full w-0.5 bg-red-500 z-10"
+                        style={{ left: `${(pointB / duration) * 100}%` }}
+                      />
+                    )}
+                    {abRepeatActive && (
+                      <div
+                        className="absolute top-1/2 -translate-y-1/2 h-1 bg-primary/30 rounded"
+                        style={{
+                          left: `${(pointA! / duration) * 100}%`,
+                          width: `${((pointB! - pointA!) / duration) * 100}%`,
+                        }}
+                      />
+                    )}
                     <Slider
                       value={[currentTime]}
                       max={duration || 100}
@@ -358,7 +483,7 @@ const PodcastDetail = () => {
                   </div>
 
                   {/* Controls */}
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
                     <div className="flex items-center gap-2">
                       <Button
                         variant="ghost"
@@ -368,13 +493,18 @@ const PodcastDetail = () => {
                       >
                         <Repeat className="w-5 h-5" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-white/70 hover:text-white hover:bg-white/10"
-                      >
-                        <Shuffle className="w-5 h-5" />
-                      </Button>
+                      
+                      {/* A-B Repeat Control */}
+                      <ABRepeatControl
+                        pointA={pointA}
+                        pointB={pointB}
+                        currentTime={currentTime}
+                        duration={duration}
+                        onSetPointA={handleSetPointA}
+                        onSetPointB={handleSetPointB}
+                        onClear={clearABRepeat}
+                        isActive={abRepeatActive}
+                      />
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -435,6 +565,17 @@ const PodcastDetail = () => {
                         </DropdownMenuContent>
                       </DropdownMenu>
 
+                      {/* Bookmark button */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => addBookmark(currentTime)}
+                        className="text-white/70 hover:text-white hover:bg-white/10"
+                        title="Thêm bookmark"
+                      >
+                        <Bookmark className="w-5 h-5" />
+                      </Button>
+
                       <Button
                         variant="ghost"
                         size="icon"
@@ -457,6 +598,35 @@ const PodcastDetail = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Bookmarks Section */}
+                {user && bookmarks.length > 0 && (
+                  <Collapsible open={showBookmarks} onOpenChange={setShowBookmarks} className="mt-4">
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" className="w-full justify-between text-white/70 hover:text-white hover:bg-white/10">
+                        <span className="flex items-center gap-2">
+                          <Bookmark className="w-4 h-4" />
+                          Bookmarks ({bookmarks.length})
+                        </span>
+                        {showBookmarks ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-2 bg-white/5 backdrop-blur-sm rounded-xl p-4">
+                      <BookmarksList
+                        bookmarks={bookmarks}
+                        currentTime={currentTime}
+                        onSeek={(time) => {
+                          if (audioRef.current) {
+                            audioRef.current.currentTime = time;
+                            setCurrentTime(time);
+                          }
+                        }}
+                        onRemove={removeBookmark}
+                        onAdd={() => addBookmark(currentTime)}
+                      />
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
 
                 {/* Synced Transcript Section */}
                 <div className="mt-6">
