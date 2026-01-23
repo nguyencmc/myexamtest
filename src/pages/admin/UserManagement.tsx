@@ -56,6 +56,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
+import { createAuditLog } from '@/hooks/useAuditLogs';
 
 interface EnrichedUser {
   id: string;
@@ -208,6 +209,15 @@ const UserManagement = () => {
         throw new Error(result.error);
       }
 
+      // Create audit log
+      await createAuditLog(
+        'create',
+        'user',
+        result.user?.id,
+        null,
+        { email: newUserEmail, full_name: newUserName, role: newUserRole }
+      );
+
       toast({
         title: "Thành công",
         description: "Đã tạo người dùng mới",
@@ -249,6 +259,16 @@ const UserManagement = () => {
         throw new Error(result.error);
       }
 
+      // Create audit log
+      await createAuditLog(
+        'update_password',
+        'user',
+        selectedUser.id,
+        null,
+        { email: selectedUser.email },
+        { action_detail: 'Password changed by admin' }
+      );
+
       toast({
         title: "Thành công",
         description: "Đã đổi mật khẩu",
@@ -281,6 +301,15 @@ const UserManagement = () => {
         throw new Error(result.error);
       }
 
+      // Create audit log
+      await createAuditLog(
+        'delete',
+        'user',
+        userToDelete.id,
+        { email: userToDelete.email, full_name: userToDelete.profile?.full_name, roles: userToDelete.roles },
+        null
+      );
+
       toast({
         title: "Thành công",
         description: "Đã xóa người dùng",
@@ -310,6 +339,20 @@ const UserManagement = () => {
       if (result.error) {
         throw new Error(result.error);
       }
+
+      // Get user info for audit log
+      const userInfo = users.find(u => u.id === userId);
+      const oldRoles = userInfo?.roles || [];
+
+      // Create audit log
+      await createAuditLog(
+        'update_role',
+        'user',
+        userId,
+        { roles: oldRoles },
+        { roles: [newRole === 'none' ? 'user' : newRole] },
+        { email: userInfo?.email }
+      );
 
       toast({
         title: "Thành công",

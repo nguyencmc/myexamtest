@@ -51,6 +51,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
+import { createAuditLog } from '@/hooks/useAuditLogs';
 
 interface BaseCategory {
   id: string;
@@ -232,9 +233,18 @@ const CategoryManagement = () => {
         title: "Thành công",
         description: "Đã cập nhật danh mục",
       });
+
+      // Create audit log for update
+      await createAuditLog(
+        'update',
+        `${activeTab}_category`,
+        editingCategory.id,
+        { name: editingCategory.name, slug: editingCategory.slug },
+        { name: formData.name, slug, is_featured: formData.is_featured }
+      );
     } else {
       // Create
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from(tableName)
         .insert({
           name: formData.name,
@@ -243,7 +253,9 @@ const CategoryManagement = () => {
           icon_url: formData.icon_url || null,
           display_order: formData.display_order,
           is_featured: formData.is_featured,
-        });
+        })
+        .select()
+        .single();
 
       if (error) {
         toast({
@@ -259,6 +271,15 @@ const CategoryManagement = () => {
         title: "Thành công",
         description: "Đã tạo danh mục mới",
       });
+
+      // Create audit log for create
+      await createAuditLog(
+        'create',
+        `${activeTab}_category`,
+        data?.id,
+        null,
+        { name: formData.name, slug, is_featured: formData.is_featured }
+      );
     }
 
     setSaving(false);
@@ -268,6 +289,9 @@ const CategoryManagement = () => {
 
   const handleDelete = async (categoryId: string) => {
     const tableName = getTableName(activeTab);
+    
+    // Get category info for audit log
+    const categoryToDelete = getCurrentCategories()?.find(c => c.id === categoryId);
     
     const { error } = await supabase
       .from(tableName)
@@ -282,6 +306,15 @@ const CategoryManagement = () => {
       });
       return;
     }
+
+    // Create audit log
+    await createAuditLog(
+      'delete',
+      `${activeTab}_category`,
+      categoryId,
+      { name: categoryToDelete?.name, slug: categoryToDelete?.slug },
+      null
+    );
 
     toast({
       title: "Thành công",

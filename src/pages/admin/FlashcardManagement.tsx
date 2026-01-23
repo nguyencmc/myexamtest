@@ -15,6 +15,7 @@ import {
   Trash2,
   ArrowLeft,
 } from 'lucide-react';
+import { createAuditLog } from '@/hooks/useAuditLogs';
 import {
   Table,
   TableBody,
@@ -90,6 +91,9 @@ const FlashcardManagement = () => {
   };
 
   const handleDelete = async (setId: string) => {
+    // Get set info for audit log
+    const setToDelete = sets.find(s => s.id === setId);
+    
     // First delete all flashcards in this set
     await supabase.from('flashcards').delete().eq('set_id', setId);
 
@@ -106,6 +110,16 @@ const FlashcardManagement = () => {
       });
       return;
     }
+
+    // Create audit log
+    await createAuditLog(
+      'delete',
+      'flashcard_set',
+      setId,
+      { title: setToDelete?.title, category: setToDelete?.category },
+      null,
+      { card_count: setToDelete?.card_count }
+    );
 
     toast({
       title: "Thành công",

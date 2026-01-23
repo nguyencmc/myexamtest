@@ -37,6 +37,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
+import { createAuditLog } from '@/hooks/useAuditLogs';
 
 interface Podcast {
   id: string;
@@ -108,6 +109,9 @@ const PodcastManagement = () => {
   };
 
   const handleDelete = async (podcastId: string) => {
+    // Get podcast info for audit log
+    const podcastToDelete = podcasts.find(p => p.id === podcastId);
+
     const { error } = await supabase
       .from('podcasts')
       .delete()
@@ -121,6 +125,15 @@ const PodcastManagement = () => {
       });
       return;
     }
+
+    // Create audit log
+    await createAuditLog(
+      'delete',
+      'podcast',
+      podcastId,
+      { title: podcastToDelete?.title, slug: podcastToDelete?.slug },
+      null
+    );
 
     toast({
       title: "Thành công",

@@ -39,6 +39,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
+import { createAuditLog } from '@/hooks/useAuditLogs';
 
 interface QuestionSet {
   id: string;
@@ -108,6 +109,9 @@ const QuestionSetManagement = () => {
   };
 
   const handleDelete = async (setId: string) => {
+    // Get question set info for audit log
+    const setToDelete = questionSets.find(s => s.id === setId);
+
     // First delete all questions associated with this set
     const { error: questionsError } = await supabase
       .from('practice_questions')
@@ -136,6 +140,15 @@ const QuestionSetManagement = () => {
       });
       return;
     }
+
+    // Create audit log
+    await createAuditLog(
+      'delete',
+      'question_set',
+      setId,
+      { title: setToDelete?.title, level: setToDelete?.level, question_count: setToDelete?.question_count },
+      null
+    );
 
     toast({
       title: "Thành công",
