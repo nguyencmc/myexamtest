@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useUserRole } from '@/hooks/useUserRole';
+import { usePermissionsContext } from '@/contexts/PermissionsContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -73,7 +73,7 @@ interface EnrichedUser {
 
 const UserManagement = () => {
   const { user: currentUser, session } = useAuth();
-  const { isAdmin, loading: roleLoading } = useUserRole();
+  const { isAdmin, hasPermission, loading: roleLoading } = usePermissionsContext();
   const navigate = useNavigate();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -106,22 +106,28 @@ const UserManagement = () => {
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [importing, setImporting] = useState(false);
 
+  const canView = hasPermission('users.view');
+  const canCreate = hasPermission('users.create');
+  const canEdit = hasPermission('users.edit');
+  const canDelete = hasPermission('users.delete');
+  const canAssignRoles = hasPermission('roles.assign');
+
   useEffect(() => {
-    if (!roleLoading && !isAdmin) {
+    if (!roleLoading && !canView) {
       navigate('/');
       toast({
         title: "Không có quyền truy cập",
-        description: "Bạn cần quyền Admin để truy cập trang này",
+        description: "Bạn không có quyền quản lý người dùng",
         variant: "destructive",
       });
     }
-  }, [isAdmin, roleLoading, navigate, toast]);
+  }, [canView, roleLoading, navigate, toast]);
 
   useEffect(() => {
-    if (isAdmin && session) {
+    if (canView && session) {
       fetchUsers();
     }
-  }, [isAdmin, session]);
+  }, [canView, session]);
 
   const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
   const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -446,7 +452,7 @@ const UserManagement = () => {
     );
   }
 
-  if (!isAdmin) {
+  if (!canView) {
     return null;
   }
 

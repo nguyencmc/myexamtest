@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useUserRole } from '@/hooks/useUserRole';
+import { usePermissionsContext } from '@/contexts/PermissionsContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -82,7 +82,7 @@ interface BookCategory extends BaseCategory {
 type CategoryType = 'exam' | 'podcast' | 'book';
 
 const CategoryManagement = () => {
-  const { isAdmin, isTeacher, loading: roleLoading } = useUserRole();
+  const { isAdmin, hasPermission, loading: roleLoading } = usePermissionsContext();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -105,24 +105,27 @@ const CategoryManagement = () => {
   });
   const [saving, setSaving] = useState(false);
 
-  const hasAccess = isAdmin || isTeacher;
+  const canView = hasPermission('categories.view');
+  const canCreate = hasPermission('categories.create');
+  const canEdit = hasPermission('categories.edit');
+  const canDelete = hasPermission('categories.delete');
 
   useEffect(() => {
-    if (!roleLoading && !hasAccess) {
+    if (!roleLoading && !canView) {
       navigate('/');
       toast({
         title: "Không có quyền truy cập",
-        description: "Bạn cần quyền Teacher hoặc Admin",
+        description: "Bạn không có quyền xem danh mục",
         variant: "destructive",
       });
     }
-  }, [hasAccess, roleLoading, navigate, toast]);
+  }, [canView, roleLoading, navigate, toast]);
 
   useEffect(() => {
-    if (hasAccess) {
+    if (canView) {
       fetchAllCategories();
     }
-  }, [hasAccess]);
+  }, [canView]);
 
   const fetchAllCategories = async () => {
     setLoading(true);
@@ -327,7 +330,7 @@ const CategoryManagement = () => {
     );
   }
 
-  if (!hasAccess) {
+  if (!canView) {
     return null;
   }
 
@@ -354,10 +357,12 @@ const CategoryManagement = () => {
               <p className="text-muted-foreground mt-1">Tạo và quản lý các danh mục nội dung</p>
             </div>
           </div>
-          <Button onClick={handleOpenCreate} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Tạo danh mục mới
-          </Button>
+          {canCreate && (
+            <Button onClick={handleOpenCreate} className="gap-2">
+              <Plus className="w-4 h-4" />
+              Tạo danh mục mới
+            </Button>
+          )}
         </div>
 
         {/* Tabs */}

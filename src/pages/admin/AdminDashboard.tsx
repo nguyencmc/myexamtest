@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useUserRole } from '@/hooks/useUserRole';
+import { usePermissionsContext } from '@/contexts/PermissionsContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -61,7 +61,7 @@ interface UserWithRole {
 
 const AdminDashboard = () => {
   const { user } = useAuth();
-  const { isAdmin, loading: roleLoading } = useUserRole();
+  const { isAdmin, hasPermission, loading: roleLoading } = usePermissionsContext();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -77,6 +77,10 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+
+  const canViewAnalytics = hasPermission('analytics.view');
+  const canManageUsers = hasPermission('users.view');
+  const canManageRoles = hasPermission('roles.assign');
 
   useEffect(() => {
     if (!roleLoading && !isAdmin) {
