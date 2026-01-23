@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { PermissionsProvider } from "@/contexts/PermissionsContext";
 import { MiniPlayerProvider } from "@/contexts/MiniPlayerContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { MiniPlayer } from "@/components/podcast/MiniPlayer";
@@ -73,7 +74,8 @@ const App = () => (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <TooltipProvider>
         <AuthProvider>
-          <MiniPlayerProvider>
+          <PermissionsProvider>
+            <MiniPlayerProvider>
             <Toaster />
             <Sonner />
             <BrowserRouter>
@@ -147,7 +149,8 @@ const App = () => (
               </Routes>
               <MiniPlayer />
             </BrowserRouter>
-          </MiniPlayerProvider>
+            </MiniPlayerProvider>
+          </PermissionsProvider>
         </AuthProvider>
       </TooltipProvider>
     </ThemeProvider>
