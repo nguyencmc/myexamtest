@@ -40,6 +40,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useToast } from '@/hooks/use-toast';
+import { createAuditLog } from '@/hooks/useAuditLogs';
 
 interface PodcastCategory {
   id: string;
@@ -353,6 +354,15 @@ const PodcastEditor = () => {
 
         if (error) throw error;
       }
+
+      // Create audit log
+      await createAuditLog(
+        isEditing ? 'update' : 'create',
+        'podcast',
+        id,
+        isEditing ? { title, slug } : null,
+        { title, slug, difficulty, duration_seconds: (durationMinutes * 60) + durationSeconds }
+      );
 
       toast({
         title: "Thành công",

@@ -35,6 +35,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { LessonEditor, CourseLesson, LessonAttachment } from '@/components/admin/course/LessonEditor';
 import { CourseTestEditor } from '@/components/admin/course/CourseTestEditor';
+import { createAuditLog } from '@/hooks/useAuditLogs';
 
 interface CourseCategory {
   id: string;
@@ -470,6 +471,21 @@ const CourseEditor = () => {
           }
         }
       }
+
+      // Create audit log
+      await createAuditLog(
+        isEditing ? 'update' : 'create',
+        'course',
+        courseId,
+        isEditing ? { title: formData.title, slug: formData.slug } : null,
+        { 
+          title: formData.title, 
+          slug: formData.slug, 
+          is_published: formData.is_published,
+          lesson_count: totalLessons,
+          section_count: sections.length 
+        }
+      );
 
       toast({
         title: "Thành công",

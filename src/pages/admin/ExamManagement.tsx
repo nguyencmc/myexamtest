@@ -38,6 +38,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
+import { createAuditLog } from '@/hooks/useAuditLogs';
 
 interface Exam {
   id: string;
@@ -109,6 +110,9 @@ const ExamManagement = () => {
   };
 
   const handleDelete = async (examId: string) => {
+    // Get exam info for audit log
+    const examToDelete = exams.find(e => e.id === examId);
+
     // First delete all questions associated with this exam
     const { error: questionsError } = await supabase
       .from('questions')
@@ -137,6 +141,15 @@ const ExamManagement = () => {
       });
       return;
     }
+
+    // Create audit log
+    await createAuditLog(
+      'delete',
+      'exam',
+      examId,
+      { title: examToDelete?.title, slug: examToDelete?.slug, question_count: examToDelete?.question_count },
+      null
+    );
 
     toast({
       title: "Thành công",

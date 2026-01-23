@@ -37,6 +37,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
+import { createAuditLog } from '@/hooks/useAuditLogs';
 
 interface Flashcard {
   id?: string;
@@ -202,6 +203,15 @@ const FlashcardEditor = () => {
 
         if (cardsError) throw cardsError;
       }
+
+      // Create audit log
+      await createAuditLog(
+        isEditing ? 'update' : 'create',
+        'flashcard_set',
+        setId,
+        isEditing ? { title, category, card_count: cards.length } : null,
+        { title, category, card_count: cards.length, is_public: isPublic }
+      );
 
       toast({
         title: "Thành công",

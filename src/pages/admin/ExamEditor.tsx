@@ -18,6 +18,7 @@ import { ExamInfoStep } from '@/components/admin/exam/ExamInfoStep';
 import { CreateQuestionsStep } from '@/components/admin/exam/CreateQuestionsStep';
 import { ReviewStep } from '@/components/admin/exam/ReviewStep';
 import { type Question } from '@/components/admin/exam/QuestionEditor';
+import { createAuditLog } from '@/hooks/useAuditLogs';
 
 interface ExamCategory {
   id: string;
@@ -220,6 +221,15 @@ const ExamEditor = () => {
 
         if (questionsError) throw questionsError;
       }
+
+      // Create audit log
+      await createAuditLog(
+        isEditing ? 'update' : 'create',
+        'exam',
+        examId,
+        isEditing ? { title, slug, question_count: questions.length } : null,
+        { title, slug, difficulty, duration_minutes: durationMinutes, question_count: questions.length }
+      );
 
       toast({
         title: "Thành công",

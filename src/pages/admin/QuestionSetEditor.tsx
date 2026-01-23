@@ -39,6 +39,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
+import { createAuditLog } from '@/hooks/useAuditLogs';
 
 interface Choice {
   id: string;
@@ -326,6 +327,16 @@ const QuestionSetEditor = () => {
 
         if (error) throw error;
       }
+
+      // Create audit log
+      const activeQuestionsCount = questions.filter(q => !q.isDeleted).length;
+      await createAuditLog(
+        isEditMode ? 'update' : 'create',
+        'question_set',
+        setId,
+        isEditMode ? { title, level, question_count: activeQuestionsCount } : null,
+        { title, level, is_published: isPublished, question_count: activeQuestionsCount }
+      );
 
       toast({
         title: "Thành công",

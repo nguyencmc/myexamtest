@@ -55,6 +55,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
+import { createAuditLog } from '@/hooks/useAuditLogs';
 
 interface Course {
   id: string;
@@ -143,6 +144,9 @@ const CourseManagement = () => {
   };
 
   const handleDelete = async (courseId: string) => {
+    // Get course info for audit log
+    const courseToDelete = courses.find(c => c.id === courseId);
+
     // First delete all sections (lessons will be deleted via cascade)
     const { error: sectionsError } = await supabase
       .from('course_sections')
@@ -166,6 +170,15 @@ const CourseManagement = () => {
       });
       return;
     }
+
+    // Create audit log
+    await createAuditLog(
+      'delete',
+      'course',
+      courseId,
+      { title: courseToDelete?.title, slug: courseToDelete?.slug, lesson_count: courseToDelete?.lesson_count },
+      null
+    );
 
     toast({
       title: "Thành công",
