@@ -45,6 +45,7 @@ import CourseEditor from "./pages/admin/CourseEditor";
 import QuestionSetManagement from "./pages/admin/QuestionSetManagement";
 import QuestionSetEditor from "./pages/admin/QuestionSetEditor";
 import PermissionManagement from "./pages/admin/PermissionManagement";
+import AuditLogs from "./pages/admin/AuditLogs";
 import StudentDashboard from "./pages/StudentDashboard";
 import Achievements from "./pages/Achievements";
 import StudyGroups from "./pages/StudyGroups";
@@ -129,6 +130,7 @@ const App = () => (
               <Route path="/teacher" element={<TeacherDashboard />} />
               <Route path="/admin/users" element={<UserManagement />} />
               <Route path="/admin/permissions" element={<PermissionManagement />} />
+              <Route path="/admin/audit-logs" element={<AuditLogs />} />
               <Route path="/admin/categories" element={<CategoryManagement />} />
               <Route path="/admin/exams" element={<ExamManagement />} />
               <Route path="/admin/exams/create" element={<ExamEditor />} />

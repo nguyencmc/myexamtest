@@ -285,6 +285,7 @@ const AdminDashboard = () => {
   const quickLinks = [
     { title: 'Quản lý người dùng', icon: Users, href: '/admin/users', color: 'text-blue-500', bg: 'bg-blue-500/10' },
     { title: 'Phân quyền RBAC', icon: Shield, href: '/admin/permissions', color: 'text-red-500', bg: 'bg-red-500/10' },
+    { title: 'Audit Logs', icon: Activity, href: '/admin/audit-logs', color: 'text-amber-500', bg: 'bg-amber-500/10' },
     { title: 'Quản lý danh mục', icon: Layers, href: '/admin/categories', color: 'text-purple-500', bg: 'bg-purple-500/10' },
     { title: 'Quản lý khóa học', icon: BookOpen, href: '/admin/courses', color: 'text-cyan-500', bg: 'bg-cyan-500/10' },
     { title: 'Quản lý đề thi', icon: FileText, href: '/admin/exams', color: 'text-green-500', bg: 'bg-green-500/10' },
