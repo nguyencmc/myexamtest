@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useUserRole } from '@/hooks/useUserRole';
+import { usePermissionsContext } from '@/contexts/PermissionsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
@@ -61,7 +61,7 @@ interface Question {
 const QuestionSetEditor = () => {
   const { id } = useParams();
   const isEditMode = Boolean(id);
-  const { isAdmin, isTeacher, loading: roleLoading } = useUserRole();
+  const { isAdmin, hasPermission, loading: roleLoading } = usePermissionsContext();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -83,14 +83,16 @@ const QuestionSetEditor = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [activeQuestionIndex, setActiveQuestionIndex] = useState<number | null>(null);
 
-  const hasAccess = isAdmin || isTeacher;
+  const canCreate = hasPermission('questions.create');
+  const canEdit = hasPermission('questions.edit');
+  const hasAccess = isEditMode ? canEdit : canCreate;
 
   useEffect(() => {
     if (!roleLoading && !hasAccess) {
       navigate('/');
       toast({
         title: "Không có quyền truy cập",
-        description: "Bạn cần quyền Teacher hoặc Admin",
+        description: "Bạn không có quyền thực hiện thao tác này",
         variant: "destructive",
       });
     }

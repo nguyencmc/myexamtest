@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useUserRole } from '@/hooks/useUserRole';
+import { usePermissionsContext } from '@/contexts/PermissionsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
@@ -33,7 +33,7 @@ const STEPS = [
 const ExamEditor = () => {
   const { id } = useParams();
   const isEditing = !!id;
-  const { isAdmin, isTeacher, loading: roleLoading } = useUserRole();
+  const { isAdmin, hasPermission, canEditOwn, loading: roleLoading } = usePermissionsContext();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -54,7 +54,9 @@ const ExamEditor = () => {
   // Questions
   const [questions, setQuestions] = useState<Question[]>([]);
 
-  const hasAccess = isAdmin || isTeacher;
+  const canCreate = hasPermission('exams.create');
+  const canEdit = hasPermission('exams.edit');
+  const hasAccess = isEditing ? (canEdit || hasPermission('exams.edit_own')) : canCreate;
 
   useEffect(() => {
     if (!roleLoading && !hasAccess) {

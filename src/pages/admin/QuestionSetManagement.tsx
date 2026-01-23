@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useUserRole } from '@/hooks/useUserRole';
+import { usePermissionsContext } from '@/contexts/PermissionsContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -53,7 +53,7 @@ interface QuestionSet {
 }
 
 const QuestionSetManagement = () => {
-  const { isAdmin, isTeacher, loading: roleLoading } = useUserRole();
+  const { isAdmin, hasPermission, loading: roleLoading } = usePermissionsContext();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -62,31 +62,34 @@ const QuestionSetManagement = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const hasAccess = isAdmin || isTeacher;
+  const canView = hasPermission('questions.view');
+  const canCreate = hasPermission('questions.create');
+  const canEdit = hasPermission('questions.edit');
+  const canDelete = hasPermission('questions.delete');
 
   useEffect(() => {
-    if (!roleLoading && !hasAccess) {
+    if (!roleLoading && !canView) {
       navigate('/');
       toast({
         title: "Không có quyền truy cập",
-        description: "Bạn cần quyền Teacher hoặc Admin",
+        description: "Bạn không có quyền xem bộ câu hỏi",
         variant: "destructive",
       });
     }
-  }, [hasAccess, roleLoading, navigate, toast]);
+  }, [canView, roleLoading, navigate, toast]);
 
   useEffect(() => {
-    if (hasAccess && user) {
+    if (canView && user) {
       fetchData();
     }
-  }, [hasAccess, user]);
+  }, [canView, user]);
 
   const fetchData = async () => {
     setLoading(true);
     
-    // Admin sees all question sets, Teacher sees only their own
+    // Admin sees all question sets, others see only their own
     let query = supabase.from('question_sets').select('*').order('created_at', { ascending: false });
-    if (isTeacher && !isAdmin) {
+    if (!isAdmin) {
       query = query.eq('creator_id', user?.id);
     }
     
@@ -196,7 +199,7 @@ const QuestionSetManagement = () => {
     );
   }
 
-  if (!hasAccess) {
+  if (!canView) {
     return null;
   }
 
@@ -221,12 +224,14 @@ const QuestionSetManagement = () => {
               <p className="text-muted-foreground mt-1">{questionSets.length} bộ đề</p>
             </div>
           </div>
-          <Link to="/admin/question-sets/create">
-            <Button className="gap-2">
-              <Plus className="w-4 h-4" />
-              Tạo bộ đề mới
-            </Button>
-          </Link>
+          {canCreate && (
+            <Link to="/admin/question-sets/create">
+              <Button className="gap-2">
+                <Plus className="w-4 h-4" />
+                Tạo bộ đề mới
+              </Button>
+            </Link>
+          )}
         </div>
 
         {/* Search */}
