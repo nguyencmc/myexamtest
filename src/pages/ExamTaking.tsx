@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { AIExplanation } from '@/components/exam/AIExplanation';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Clock, 
   ChevronLeft, 
@@ -23,7 +24,14 @@ import {
   LayoutGrid,
   Flag,
   Lock,
-  LogIn
+  LogIn,
+  Share2,
+  Download,
+  Sparkles,
+  Target,
+  Zap,
+  Medal,
+  Keyboard
 } from 'lucide-react';
 import {
   Drawer,
@@ -42,6 +50,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Question {
   id: string;
@@ -70,6 +83,7 @@ const ExamTaking = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast } = useToast();
   
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string[]>>({});
@@ -78,6 +92,8 @@ const ExamTaking = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
   const [showNavigator, setShowNavigator] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
   const [startTime] = useState(Date.now());
 
   // Fetch exam details
@@ -241,6 +257,29 @@ const ExamTaking = () => {
     });
   }, [questions, exam, answers, startTime, user?.id]);
 
+  const handleShareResults = async () => {
+    const shareText = `🎉 Tôi vừa hoàn thành bài thi "${exam?.title}" với ${scorePercent}% điểm!\n\n✅ Đúng: ${correctCount}/${questions?.length} câu\n⏱️ Thời gian: ${formatTime(Math.floor((Date.now() - startTime) / 1000))}\n\nLuyện thi cùng AI tại AI-Exam.cloud`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Kết quả thi: ${exam?.title}`,
+          text: shareText,
+          url: window.location.origin,
+        });
+      } catch (err) {
+        // User cancelled or error
+      }
+    } else {
+      // Fallback: copy to clipboard
+      await navigator.clipboard.writeText(shareText);
+      toast({
+        title: "Đã sao chép!",
+        description: "Kết quả đã được sao chép vào clipboard",
+      });
+    }
+  };
+
   const currentQuestion = questions?.[currentQuestionIndex];
   const answeredCount = Object.keys(answers).filter(id => answers[id]?.length > 0).length;
   const progress = questions ? (answeredCount / questions.length) * 100 : 0;
@@ -250,6 +289,78 @@ const ExamTaking = () => {
     (q) => isAnswerCorrect(q, answers[q.id])
   ).length || 0;
   const scorePercent = questions ? Math.round((correctCount / questions.length) * 100) : 0;
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    if (isSubmitted || !questions) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      
+      switch (e.key) {
+        case 'ArrowLeft':
+        case 'a':
+        case 'A':
+          e.preventDefault();
+          setCurrentQuestionIndex(prev => Math.max(0, prev - 1));
+          break;
+        case 'ArrowRight':
+        case 'd':
+        case 'D':
+          e.preventDefault();
+          setCurrentQuestionIndex(prev => Math.min(questions.length - 1, prev + 1));
+          break;
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+          e.preventDefault();
+          const optionIndex = parseInt(e.key) - 1;
+          const opts = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+          if (currentQuestion && optionIndex < opts.length) {
+            const optionKey = `option_${opts[optionIndex].toLowerCase()}` as keyof Question;
+            if (currentQuestion[optionKey]) {
+              handleAnswerSelect(currentQuestion.id, opts[optionIndex]);
+            }
+          }
+          break;
+        case 'f':
+        case 'F':
+          e.preventDefault();
+          if (currentQuestion) {
+            toggleFlag(currentQuestion.id);
+          }
+          break;
+        case 'Enter':
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            setShowSubmitDialog(true);
+          }
+          break;
+        case '?':
+          e.preventDefault();
+          setShowKeyboardHelp(prev => !prev);
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isSubmitted, questions, currentQuestionIndex, currentQuestion]);
+
+  // Confetti effect when score >= 80%
+  useEffect(() => {
+    if (isSubmitted && scorePercent >= 80) {
+      setShowConfetti(true);
+      const timer = setTimeout(() => setShowConfetti(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSubmitted, scorePercent]);
 
   const getOptionClass = (questionId: string, option: string) => {
     const userAnswers = answers[questionId] || [];
@@ -305,48 +416,136 @@ const ExamTaking = () => {
 
   // Results screen
   if (isSubmitted) {
+    const getScoreMessage = () => {
+      if (scorePercent >= 90) return { text: "Xuất sắc! 🌟", color: "text-green-500" };
+      if (scorePercent >= 80) return { text: "Tuyệt vời! 🎉", color: "text-green-500" };
+      if (scorePercent >= 70) return { text: "Khá tốt! 👍", color: "text-blue-500" };
+      if (scorePercent >= 50) return { text: "Cần cố gắng thêm! 💪", color: "text-yellow-500" };
+      return { text: "Hãy ôn tập lại nhé! 📚", color: "text-red-500" };
+    };
+    
+    const scoreMessage = getScoreMessage();
+
     return (
       <div className="min-h-screen bg-background">
         <Header />
         
-        {/* Results Summary */}
-        <section className="py-12 bg-gradient-to-br from-primary/10 via-background to-accent/10">
-          <div className="container mx-auto px-4">
+        {/* Confetti Animation */}
+        {showConfetti && (
+          <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+            {[...Array(50)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute animate-confetti"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: '-10px',
+                  animationDelay: `${Math.random() * 3}s`,
+                  animationDuration: `${3 + Math.random() * 2}s`,
+                }}
+              >
+                <div
+                  className="w-3 h-3 rotate-45"
+                  style={{
+                    backgroundColor: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'][Math.floor(Math.random() * 7)],
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {/* Results Summary - Enhanced */}
+        <section className="py-12 bg-gradient-to-br from-primary/10 via-background to-accent/10 relative overflow-hidden">
+          {/* Decorative elements */}
+          <div className="absolute top-10 left-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-10 right-10 w-48 h-48 bg-accent/5 rounded-full blur-3xl" />
+          
+          <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-2xl mx-auto text-center">
-              <div className={`w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center ${
-                scorePercent >= 70 ? 'bg-green-500/20' : scorePercent >= 50 ? 'bg-yellow-500/20' : 'bg-red-500/20'
-              }`}>
-                <Trophy className={`w-12 h-12 ${
-                  scorePercent >= 70 ? 'text-green-500' : scorePercent >= 50 ? 'text-yellow-500' : 'text-red-500'
-                }`} />
+              {/* Score Circle */}
+              <div className="relative w-40 h-40 mx-auto mb-6">
+                <svg className="w-full h-full transform -rotate-90">
+                  <circle
+                    cx="80"
+                    cy="80"
+                    r="70"
+                    fill="none"
+                    stroke="hsl(var(--muted))"
+                    strokeWidth="12"
+                  />
+                  <circle
+                    cx="80"
+                    cy="80"
+                    r="70"
+                    fill="none"
+                    stroke={scorePercent >= 70 ? 'hsl(var(--primary))' : scorePercent >= 50 ? '#EAB308' : '#EF4444'}
+                    strokeWidth="12"
+                    strokeLinecap="round"
+                    strokeDasharray={`${(scorePercent / 100) * 440} 440`}
+                    className="transition-all duration-1000 ease-out"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-4xl font-bold text-foreground">{scorePercent}%</span>
+                  <span className="text-sm text-muted-foreground">Điểm số</span>
+                </div>
               </div>
               
-              <h1 className="text-3xl font-bold text-foreground mb-2">Kết quả bài thi</h1>
-              <p className="text-muted-foreground mb-6">{exam.title}</p>
+              <h1 className={`text-3xl font-bold mb-2 ${scoreMessage.color}`}>
+                {scoreMessage.text}
+              </h1>
+              <p className="text-muted-foreground mb-8">{exam?.title}</p>
               
-              <div className="grid grid-cols-3 gap-4 mb-8">
-                <div className="bg-card border border-border rounded-xl p-4">
-                  <div className="text-3xl font-bold text-primary mb-1">{scorePercent}%</div>
-                  <div className="text-sm text-muted-foreground">Điểm số</div>
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+                <div className="bg-card border border-border rounded-xl p-4 hover:border-primary/30 transition-colors">
+                  <Target className="w-6 h-6 text-primary mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-foreground">{scorePercent}%</div>
+                  <div className="text-xs text-muted-foreground">Độ chính xác</div>
                 </div>
-                <div className="bg-card border border-border rounded-xl p-4">
-                  <div className="text-3xl font-bold text-green-500 mb-1">{correctCount}</div>
-                  <div className="text-sm text-muted-foreground">Câu đúng</div>
+                <div className="bg-card border border-border rounded-xl p-4 hover:border-green-500/30 transition-colors">
+                  <CheckCircle2 className="w-6 h-6 text-green-500 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-green-500">{correctCount}</div>
+                  <div className="text-xs text-muted-foreground">Câu đúng</div>
                 </div>
-                <div className="bg-card border border-border rounded-xl p-4">
-                  <div className="text-3xl font-bold text-red-500 mb-1">{questions.length - correctCount}</div>
-                  <div className="text-sm text-muted-foreground">Câu sai</div>
+                <div className="bg-card border border-border rounded-xl p-4 hover:border-red-500/30 transition-colors">
+                  <XCircle className="w-6 h-6 text-red-500 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-red-500">{(questions?.length || 0) - correctCount}</div>
+                  <div className="text-xs text-muted-foreground">Câu sai</div>
+                </div>
+                <div className="bg-card border border-border rounded-xl p-4 hover:border-blue-500/30 transition-colors">
+                  <Clock className="w-6 h-6 text-blue-500 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-blue-500">
+                    {formatTime(Math.floor((Date.now() - startTime) / 1000))}
+                  </div>
+                  <div className="text-xs text-muted-foreground">Thời gian</div>
                 </div>
               </div>
 
-              <div className="flex justify-center gap-4">
-                <Button variant="outline" onClick={() => navigate('/exams')}>
-                  <Home className="w-4 h-4 mr-2" />
-                  Về trang chủ
+              {/* Achievement Badge */}
+              {scorePercent >= 80 && (
+                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 px-4 py-2 rounded-full mb-6">
+                  <Medal className="w-5 h-5 text-yellow-500" />
+                  <span className="text-sm font-medium text-yellow-600 dark:text-yellow-400">
+                    {scorePercent >= 90 ? 'Huy chương Vàng!' : 'Huy chương Bạc!'}
+                  </span>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap justify-center gap-3">
+                <Button variant="outline" onClick={() => navigate('/exams')} className="gap-2">
+                  <Home className="w-4 h-4" />
+                  Danh sách đề
                 </Button>
-                <Button onClick={() => window.location.reload()}>
-                  <RotateCcw className="w-4 h-4 mr-2" />
+                <Button onClick={() => window.location.reload()} className="gap-2">
+                  <RotateCcw className="w-4 h-4" />
                   Làm lại
+                </Button>
+                <Button variant="outline" onClick={handleShareResults} className="gap-2">
+                  <Share2 className="w-4 h-4" />
+                  Chia sẻ
                 </Button>
               </div>
             </div>
