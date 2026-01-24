@@ -339,5 +339,3 @@
 .animate-pulse-ring {
   animation: pulseRing 2s ease-out infinite;
 }
-  overflow: hidden;
-}
