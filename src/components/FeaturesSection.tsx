@@ -92,13 +92,25 @@ const features = [
 export const FeaturesSection = () => {
   return (
     <section className="relative bg-primary py-20 lg:py-28">
-      <div className="container mx-auto px-4 lg:px-8">
+      {/* Animated background dots */}
+      <div className="absolute inset-0 overflow-hidden opacity-20">
+        <div className="absolute top-10 left-10 w-3 h-3 bg-white rounded-full animate-pulse" />
+        <div className="absolute top-20 right-20 w-2 h-2 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.5s' }} />
+        <div className="absolute bottom-20 left-1/4 w-4 h-4 bg-white rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute bottom-40 right-1/3 w-2 h-2 bg-white rounded-full animate-pulse" style={{ animationDelay: '1.5s' }} />
+      </div>
+      
+      <div className="container mx-auto px-4 lg:px-8 relative z-10">
         <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full mb-4 text-sm font-medium">
+            <Zap className="h-4 w-4" />
+            <span>12+ công cụ học tập thông minh</span>
+          </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-4">
             Tính năng nổi bật
           </h2>
           <p className="text-lg text-primary-foreground/80 max-w-2xl mx-auto">
-            The Best Study mang đến những tính năng tuyệt vời giúp bạn đẩy nhanh hành trình học ngôn ngữ. Đây là những tính năng nổi bật mà bạn chắc chắn sẽ yêu thích!
+            AI-Exam.cloud mang đến những tính năng tuyệt vời giúp bạn đẩy nhanh hành trình học tập. Đây là những tính năng nổi bật mà bạn chắc chắn sẽ yêu thích!
           </p>
         </div>
 
@@ -106,22 +118,34 @@ export const FeaturesSection = () => {
           {features.map((feature, index) => (
             <Card
               key={feature.title}
-              className="group bg-card border-0 shadow-card card-hover cursor-pointer overflow-hidden"
+              className="group bg-card border-0 shadow-card card-hover cursor-pointer overflow-hidden relative"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
-              <CardHeader className="pb-2">
-                <div className={`w-14 h-14 rounded-xl ${feature.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
+              {/* Hover gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              
+              <CardHeader className="pb-2 relative z-10">
+                <div className={`w-14 h-14 rounded-xl ${feature.color} flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg`}>
                   <feature.icon className="h-7 w-7" />
                 </div>
                 <CardTitle className="text-lg font-bold text-card-foreground group-hover:text-primary transition-colors">
                   {feature.title}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="relative z-10">
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {feature.description}
                 </p>
               </CardContent>
+              
+              {/* Arrow indicator on hover */}
+              <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
             </Card>
           ))}
         </div>
