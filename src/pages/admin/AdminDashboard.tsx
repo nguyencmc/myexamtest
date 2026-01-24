@@ -7,6 +7,7 @@ import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { ExportDatabaseDialog } from '@/components/admin/ExportDatabaseDialog';
 import { 
   Users, 
   FileText, 
@@ -19,7 +20,6 @@ import {
   Settings,
   ChevronRight,
   Plus,
-  Download,
   HelpCircle
 } from 'lucide-react';
 import {
@@ -76,7 +76,7 @@ const AdminDashboard = () => {
   });
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
-  const [exporting, setExporting] = useState(false);
+  
 
   const canViewAnalytics = hasPermission('analytics.view');
   const canManageUsers = hasPermission('users.view');
@@ -218,43 +218,6 @@ const AdminDashboard = () => {
     fetchUsers();
   };
 
-  const handleExportDatabase = async () => {
-    setExporting(true);
-    try {
-      const response = await supabase.functions.invoke('export-database');
-      
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-
-      const jsonData = JSON.stringify(response.data, null, 2);
-      const blob = new Blob([jsonData], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `database-export-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      toast({
-        title: "Thành công",
-        description: "Đã xuất database ra file JSON",
-      });
-    } catch (error) {
-      console.error('Export error:', error);
-      toast({
-        title: "Lỗi",
-        description: "Không thể xuất database",
-        variant: "destructive",
-      });
-    } finally {
-      setExporting(false);
-    }
-  };
-
   if (roleLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -382,15 +345,7 @@ const AdminDashboard = () => {
 
         {/* Export Button - Mobile */}
         <div className="mb-6 md:hidden">
-          <Button 
-            variant="outline" 
-            className="w-full gap-2"
-            onClick={handleExportDatabase}
-            disabled={exporting}
-          >
-            <Download className="w-4 h-4" />
-            {exporting ? 'Đang xuất...' : 'Xuất Database'}
-          </Button>
+          <ExportDatabaseDialog />
         </div>
 
         {/* Users Section */}
@@ -406,16 +361,7 @@ const AdminDashboard = () => {
                   Phân quyền và quản lý người dùng
                 </CardDescription>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="hidden md:flex gap-2"
-                onClick={handleExportDatabase}
-                disabled={exporting}
-              >
-                <Download className="w-4 h-4" />
-                {exporting ? 'Đang xuất...' : 'Xuất Database'}
-              </Button>
+              <ExportDatabaseDialog />
             </div>
           </CardHeader>
           <CardContent className="p-0 md:p-6 md:pt-0">
