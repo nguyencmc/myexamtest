@@ -1,19 +1,18 @@
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { useUserRole } from '@/hooks/useUserRole';
+import { useAuth } from '@/contexts/AuthContext';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   BarChart3,
-  FileText,
-  Layers,
   GraduationCap,
-  Headphones,
-  BookOpen,
-  Trophy,
-  Target,
+  Layers,
   History,
-  Settings,
+  Trophy,
+  Heart,
   Users,
-  ShieldCheck,
+  Settings,
+  User,
+  BookMarked,
 } from 'lucide-react';
 
 interface NavItem {
@@ -29,32 +28,30 @@ interface DashboardSidebarProps {
 
 export const DashboardSidebar = ({ flashcardDueCount = 0 }: DashboardSidebarProps) => {
   const location = useLocation();
-  const { isAdmin, isTeacher } = useUserRole();
+  const { user } = useAuth();
 
-  const mainNavItems: NavItem[] = [
+  const myContentItems: NavItem[] = [
     { title: 'Dashboard', href: '/dashboard', icon: BarChart3 },
-    { title: 'Đề thi', href: '/exams', icon: FileText },
-    { title: 'Luyện tập', href: '/practice', icon: Target },
-    { title: 'Flashcards', href: '/flashcards', icon: Layers, badge: flashcardDueCount },
-    { title: 'Khóa học', href: '/my-courses', icon: GraduationCap },
-    { title: 'Podcasts', href: '/podcasts', icon: Headphones },
-    { title: 'Sách', href: '/books', icon: BookOpen },
+    { title: 'Khóa học của tôi', href: '/my-courses', icon: GraduationCap },
+    { title: 'Flashcards của tôi', href: '/flashcards', icon: Layers, badge: flashcardDueCount },
+    { title: 'Lịch sử làm bài', href: '/history', icon: History },
+    { title: 'Thành tích', href: '/achievements', icon: Trophy },
+    { title: 'Yêu thích', href: '/my-courses?tab=wishlist', icon: Heart },
   ];
 
-  const secondaryNavItems: NavItem[] = [
-    { title: 'Thành tích', href: '/achievements', icon: Trophy },
-    { title: 'Lịch sử', href: '/history', icon: History },
-    { title: 'Nhóm học', href: '/study-groups', icon: Users },
+  const socialItems: NavItem[] = [
+    { title: 'Nhóm học tập', href: '/study-groups', icon: Users },
+    { title: 'Bảng xếp hạng', href: '/leaderboard', icon: BookMarked },
+  ];
+
+  const accountItems: NavItem[] = [
+    { title: 'Hồ sơ cá nhân', href: '/profile', icon: User },
     { title: 'Cài đặt', href: '/settings', icon: Settings },
   ];
 
-  const adminNavItems: NavItem[] = [
-    ...(isAdmin ? [{ title: 'Admin', href: '/admin', icon: ShieldCheck }] : []),
-    ...(isTeacher && !isAdmin ? [{ title: 'Teacher', href: '/teacher', icon: GraduationCap }] : []),
-  ];
-
   const NavLink = ({ item }: { item: NavItem }) => {
-    const isActive = location.pathname === item.href;
+    const isActive = location.pathname === item.href || 
+      (item.href.includes('?') && location.pathname + location.search === item.href);
     
     return (
       <Link
@@ -78,47 +75,55 @@ export const DashboardSidebar = ({ flashcardDueCount = 0 }: DashboardSidebarProp
     );
   };
 
+  const userInitial = user?.email?.charAt(0).toUpperCase() || 'U';
+
   return (
-    <aside className="w-full h-full bg-card border-r border-border/50 p-4 space-y-6">
-      {/* Logo/Brand */}
-      <div className="flex items-center gap-2 px-3 pb-4 border-b border-border/50">
-        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-          <BarChart3 className="w-4 h-4 text-primary" />
+    <aside className="w-full h-full bg-card border-r border-border/50 p-4 space-y-6 overflow-y-auto">
+      {/* User Profile Card */}
+      <div className="flex items-center gap-3 px-3 pb-4 border-b border-border/50">
+        <Avatar className="h-10 w-10">
+          <AvatarImage src="" />
+          <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+            {userInitial}
+          </AvatarFallback>
+        </Avatar>
+        <div className="min-w-0">
+          <p className="font-semibold text-foreground text-sm truncate">
+            {user?.email?.split('@')[0] || 'Người dùng'}
+          </p>
+          <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
         </div>
-        <span className="font-semibold text-foreground">Học tập</span>
       </div>
 
-      {/* Main Navigation */}
+      {/* My Content */}
       <nav className="space-y-1">
         <p className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-          Menu chính
+          Nội dung của tôi
         </p>
-        {mainNavItems.map((item) => (
+        {myContentItems.map((item) => (
           <NavLink key={item.href} item={item} />
         ))}
       </nav>
 
-      {/* Secondary Navigation */}
+      {/* Social */}
       <nav className="space-y-1">
         <p className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-          Khác
+          Cộng đồng
         </p>
-        {secondaryNavItems.map((item) => (
+        {socialItems.map((item) => (
           <NavLink key={item.href} item={item} />
         ))}
       </nav>
 
-      {/* Admin/Teacher Links */}
-      {adminNavItems.length > 0 && (
-        <nav className="space-y-1 pt-4 border-t border-border/50">
-          <p className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-            Quản trị
-          </p>
-          {adminNavItems.map((item) => (
-            <NavLink key={item.href} item={item} />
-          ))}
-        </nav>
-      )}
+      {/* Account */}
+      <nav className="space-y-1 pt-4 border-t border-border/50">
+        <p className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+          Tài khoản
+        </p>
+        {accountItems.map((item) => (
+          <NavLink key={item.href} item={item} />
+        ))}
+      </nav>
     </aside>
   );
 };
