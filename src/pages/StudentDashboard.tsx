@@ -235,13 +235,13 @@ const StudentDashboard = () => {
       <Header />
       
       <div className="flex h-[calc(100vh-64px)]">
-        {/* Left Sidebar - 1 part */}
-        <div className="w-60 flex-shrink-0 hidden lg:block">
+      {/* Left Sidebar - 2 parts */}
+        <div className="w-[20%] min-w-[200px] max-w-[280px] flex-shrink-0 hidden lg:block">
           <DashboardSidebar flashcardDueCount={flashcardDueCount} />
         </div>
         
-        {/* Main Content - 4 parts */}
-        <div className="flex-1 min-w-0 overflow-hidden">
+        {/* Main Content - 5 parts */}
+        <div className="flex-[5] min-w-0 overflow-hidden">
           <DashboardMainContent
             stats={stats}
             weeklyProgress={weeklyProgress}
@@ -249,8 +249,8 @@ const StudentDashboard = () => {
           />
         </div>
         
-        {/* Right Sidebar - 1 part */}
-        <div className="w-72 flex-shrink-0 hidden xl:block">
+        {/* Right Sidebar - 3 parts */}
+        <div className="w-[30%] min-w-[280px] max-w-[360px] flex-shrink-0 hidden xl:block">
           <DashboardRecommendations
             streak={streak}
             level={stats.level}
