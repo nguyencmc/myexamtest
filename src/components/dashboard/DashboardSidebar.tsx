@@ -1,7 +1,8 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import {
   BarChart3,
   GraduationCap,
@@ -13,6 +14,7 @@ import {
   Settings,
   User,
   BookMarked,
+  ArrowLeft,
 } from 'lucide-react';
 
 interface NavItem {
@@ -28,6 +30,7 @@ interface DashboardSidebarProps {
 
 export const DashboardSidebar = ({ flashcardDueCount = 0 }: DashboardSidebarProps) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   const myContentItems: NavItem[] = [
@@ -79,6 +82,17 @@ export const DashboardSidebar = ({ flashcardDueCount = 0 }: DashboardSidebarProp
 
   return (
     <aside className="w-full h-full bg-card border-r border-border/50 p-4 space-y-6 overflow-y-auto">
+      {/* Back Button */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => navigate('/')}
+        className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Quay lại trang chủ
+      </Button>
+
       {/* User Profile Card */}
       <div className="flex items-center gap-3 px-3 pb-4 border-b border-border/50">
         <Avatar className="h-10 w-10">
