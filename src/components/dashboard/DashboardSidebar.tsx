@@ -1,8 +1,6 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
 import {
   BarChart3,
   GraduationCap,
@@ -14,53 +12,67 @@ import {
   Settings,
   User,
   BookMarked,
-  ArrowLeft,
 } from 'lucide-react';
+
+export type DashboardView = 
+  | 'dashboard' 
+  | 'my-courses' 
+  | 'flashcards' 
+  | 'history' 
+  | 'achievements' 
+  | 'wishlist'
+  | 'study-groups'
+  | 'leaderboard'
+  | 'profile'
+  | 'settings';
 
 interface NavItem {
   title: string;
-  href: string;
+  view: DashboardView;
   icon: React.ElementType;
   badge?: number;
 }
 
 interface DashboardSidebarProps {
   flashcardDueCount?: number;
+  activeView: DashboardView;
+  onViewChange: (view: DashboardView) => void;
 }
 
-export const DashboardSidebar = ({ flashcardDueCount = 0 }: DashboardSidebarProps) => {
-  const location = useLocation();
-  const navigate = useNavigate();
+export const DashboardSidebar = ({ 
+  flashcardDueCount = 0, 
+  activeView,
+  onViewChange
+}: DashboardSidebarProps) => {
   const { user } = useAuth();
 
   const myContentItems: NavItem[] = [
-    { title: 'Dashboard', href: '/dashboard', icon: BarChart3 },
-    { title: 'Khóa học của tôi', href: '/my-courses', icon: GraduationCap },
-    { title: 'Flashcards của tôi', href: '/flashcards', icon: Layers, badge: flashcardDueCount },
-    { title: 'Lịch sử làm bài', href: '/history', icon: History },
-    { title: 'Thành tích', href: '/achievements', icon: Trophy },
-    { title: 'Yêu thích', href: '/my-courses?tab=wishlist', icon: Heart },
+    { title: 'Dashboard', view: 'dashboard', icon: BarChart3 },
+    { title: 'Khóa học của tôi', view: 'my-courses', icon: GraduationCap },
+    { title: 'Flashcards của tôi', view: 'flashcards', icon: Layers, badge: flashcardDueCount },
+    { title: 'Lịch sử làm bài', view: 'history', icon: History },
+    { title: 'Thành tích', view: 'achievements', icon: Trophy },
+    { title: 'Yêu thích', view: 'wishlist', icon: Heart },
   ];
 
   const socialItems: NavItem[] = [
-    { title: 'Nhóm học tập', href: '/study-groups', icon: Users },
-    { title: 'Bảng xếp hạng', href: '/leaderboard', icon: BookMarked },
+    { title: 'Nhóm học tập', view: 'study-groups', icon: Users },
+    { title: 'Bảng xếp hạng', view: 'leaderboard', icon: BookMarked },
   ];
 
   const accountItems: NavItem[] = [
-    { title: 'Hồ sơ cá nhân', href: '/profile', icon: User },
-    { title: 'Cài đặt', href: '/settings', icon: Settings },
+    { title: 'Hồ sơ cá nhân', view: 'profile', icon: User },
+    { title: 'Cài đặt', view: 'settings', icon: Settings },
   ];
 
-  const NavLink = ({ item }: { item: NavItem }) => {
-    const isActive = location.pathname === item.href || 
-      (item.href.includes('?') && location.pathname + location.search === item.href);
+  const NavButton = ({ item }: { item: NavItem }) => {
+    const isActive = activeView === item.view;
     
     return (
-      <Link
-        to={item.href}
+      <button
+        onClick={() => onViewChange(item.view)}
         className={cn(
-          "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+          "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left",
           "hover:bg-primary/10 hover:text-primary",
           isActive 
             ? "bg-primary/10 text-primary border-l-2 border-primary" 
@@ -74,7 +86,7 @@ export const DashboardSidebar = ({ flashcardDueCount = 0 }: DashboardSidebarProp
             {item.badge}
           </span>
         )}
-      </Link>
+      </button>
     );
   };
 
@@ -82,17 +94,6 @@ export const DashboardSidebar = ({ flashcardDueCount = 0 }: DashboardSidebarProp
 
   return (
     <aside className="w-full h-full bg-card border-r border-border/50 p-4 space-y-6 overflow-y-auto">
-      {/* Back Button */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => navigate('/')}
-        className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Quay lại trang chủ
-      </Button>
-
       {/* User Profile Card */}
       <div className="flex items-center gap-3 px-3 pb-4 border-b border-border/50">
         <Avatar className="h-10 w-10">
@@ -115,7 +116,7 @@ export const DashboardSidebar = ({ flashcardDueCount = 0 }: DashboardSidebarProp
           Nội dung của tôi
         </p>
         {myContentItems.map((item) => (
-          <NavLink key={item.href} item={item} />
+          <NavButton key={item.view} item={item} />
         ))}
       </nav>
 
@@ -125,7 +126,7 @@ export const DashboardSidebar = ({ flashcardDueCount = 0 }: DashboardSidebarProp
           Cộng đồng
         </p>
         {socialItems.map((item) => (
-          <NavLink key={item.href} item={item} />
+          <NavButton key={item.view} item={item} />
         ))}
       </nav>
 
@@ -135,7 +136,7 @@ export const DashboardSidebar = ({ flashcardDueCount = 0 }: DashboardSidebarProp
           Tài khoản
         </p>
         {accountItems.map((item) => (
-          <NavLink key={item.href} item={item} />
+          <NavButton key={item.view} item={item} />
         ))}
       </nav>
     </aside>
