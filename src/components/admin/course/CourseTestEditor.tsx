@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -23,6 +22,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { MiniRichTextEditor } from '@/components/editor/MiniRichTextEditor';
 
 interface TestQuestion {
   id?: string;
@@ -315,11 +315,12 @@ export const CourseTestEditor = ({ lessonId, lessonTitle }: CourseTestEditorProp
 
                 <div className="space-y-2">
                   <Label>Mô tả</Label>
-                  <Textarea
+                  <MiniRichTextEditor
                     value={test.description || ''}
-                    onChange={(e) => setTest(prev => ({ ...prev, description: e.target.value }))}
+                    onChange={(value) => setTest(prev => ({ ...prev, description: value }))}
                     placeholder="Mô tả về bài test..."
-                    rows={2}
+                    minHeight="60px"
+                    showLists={true}
                   />
                 </div>
               </CardContent>
@@ -365,11 +366,12 @@ export const CourseTestEditor = ({ lessonId, lessonTitle }: CourseTestEditorProp
 
                         <div className="space-y-2">
                           <Label>Nội dung câu hỏi</Label>
-                          <Textarea
+                          <MiniRichTextEditor
                             value={question.question_text}
-                            onChange={(e) => updateQuestion(index, { question_text: e.target.value })}
+                            onChange={(value) => updateQuestion(index, { question_text: value })}
                             placeholder="Nhập nội dung câu hỏi..."
-                            rows={2}
+                            minHeight="60px"
+                            showLists={false}
                           />
                         </div>
 
@@ -410,11 +412,12 @@ export const CourseTestEditor = ({ lessonId, lessonTitle }: CourseTestEditorProp
 
                         <div className="space-y-2">
                           <Label>Giải thích (tùy chọn)</Label>
-                          <Textarea
+                          <MiniRichTextEditor
                             value={question.explanation || ''}
-                            onChange={(e) => updateQuestion(index, { explanation: e.target.value })}
+                            onChange={(value) => updateQuestion(index, { explanation: value })}
                             placeholder="Giải thích đáp án đúng..."
-                            rows={2}
+                            minHeight="50px"
+                            showLists={true}
                           />
                         </div>
                       </CardContent>

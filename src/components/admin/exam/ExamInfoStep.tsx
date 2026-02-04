@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -10,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FileText, Clock, BarChart3, FolderOpen } from 'lucide-react';
+import { MiniRichTextEditor } from '@/components/editor/MiniRichTextEditor';
 
 interface ExamCategory {
   id: string;
@@ -112,12 +112,12 @@ export const ExamInfoStep = ({
           {/* Description */}
           <div className="space-y-2">
             <Label htmlFor="description">Mô tả</Label>
-            <Textarea
-              id="description"
+            <MiniRichTextEditor
               value={description}
-              onChange={(e) => onDescriptionChange(e.target.value)}
+              onChange={onDescriptionChange}
               placeholder="Mô tả ngắn về nội dung và mục đích của đề thi..."
-              rows={3}
+              minHeight="80px"
+              showLists={true}
             />
           </div>
 

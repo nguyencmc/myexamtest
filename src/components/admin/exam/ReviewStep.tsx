@@ -216,7 +216,10 @@ export const ReviewStep = ({
           {description && (
             <div>
               <p className="text-sm text-muted-foreground mb-1">Mô tả</p>
-              <p className="text-sm">{description}</p>
+              <div 
+                className="text-sm prose prose-sm max-w-none dark:prose-invert"
+                dangerouslySetInnerHTML={{ __html: description }}
+              />
             </div>
           )}
         </CardContent>

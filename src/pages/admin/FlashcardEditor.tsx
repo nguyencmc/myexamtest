@@ -7,7 +7,6 @@ import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { 
@@ -38,6 +37,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { createAuditLog } from '@/hooks/useAuditLogs';
+import { MiniRichTextEditor } from '@/components/editor/MiniRichTextEditor';
 
 interface Flashcard {
   id?: string;
@@ -293,12 +293,12 @@ const FlashcardEditor = () => {
 
                 <div>
                   <Label htmlFor="description">Mô tả</Label>
-                  <Textarea
-                    id="description"
+                  <MiniRichTextEditor
                     value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    onChange={setDescription}
                     placeholder="Mô tả về bộ thẻ"
-                    rows={3}
+                    minHeight="70px"
+                    showLists={true}
                   />
                 </div>
 
@@ -389,20 +389,21 @@ const FlashcardEditor = () => {
                       <div className="grid md:grid-cols-2 gap-4">
                         <div>
                           <Label>Mặt trước *</Label>
-                          <Textarea
+                          <MiniRichTextEditor
                             value={card.front_text}
-                            onChange={(e) => updateCard(index, 'front_text', e.target.value)}
+                            onChange={(value) => updateCard(index, 'front_text', value)}
                             placeholder="Từ vựng, câu hỏi..."
-                            rows={3}
+                            minHeight="70px"
                           />
                         </div>
                         <div>
                           <Label>Mặt sau *</Label>
-                          <Textarea
+                          <MiniRichTextEditor
                             value={card.back_text}
-                            onChange={(e) => updateCard(index, 'back_text', e.target.value)}
+                            onChange={(value) => updateCard(index, 'back_text', value)}
                             placeholder="Nghĩa, đáp án..."
-                            rows={3}
+                            minHeight="70px"
+                            showLists={true}
                           />
                         </div>
                       </div>

@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -40,6 +39,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { createAuditLog } from '@/hooks/useAuditLogs';
+import { MiniRichTextEditor } from '@/components/editor/MiniRichTextEditor';
 
 interface Choice {
   id: string;
@@ -422,12 +422,12 @@ const QuestionSetEditor = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="description">Mô tả</Label>
-                  <Textarea
-                    id="description"
+                  <MiniRichTextEditor
                     value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    onChange={setDescription}
                     placeholder="Mô tả ngắn về bộ đề..."
-                    rows={3}
+                    minHeight="70px"
+                    showLists={true}
                   />
                 </div>
 
@@ -590,11 +590,12 @@ const QuestionSetEditor = () => {
                   {/* Question prompt */}
                   <div className="space-y-2">
                     <Label>Nội dung câu hỏi *</Label>
-                    <Textarea
+                    <MiniRichTextEditor
                       value={activeQuestion.prompt}
-                      onChange={(e) => updateQuestion(activeQuestionIndex!, { prompt: e.target.value })}
+                      onChange={(value) => updateQuestion(activeQuestionIndex!, { prompt: value })}
                       placeholder="Nhập nội dung câu hỏi..."
-                      rows={3}
+                      minHeight="80px"
+                      showLists={false}
                     />
                   </div>
 
@@ -629,11 +630,12 @@ const QuestionSetEditor = () => {
                   {/* Explanation */}
                   <div className="space-y-2">
                     <Label>Giải thích</Label>
-                    <Textarea
+                    <MiniRichTextEditor
                       value={activeQuestion.explanation}
-                      onChange={(e) => updateQuestion(activeQuestionIndex!, { explanation: e.target.value })}
+                      onChange={(value) => updateQuestion(activeQuestionIndex!, { explanation: value })}
                       placeholder="Giải thích đáp án (hiển thị sau khi người dùng trả lời)..."
-                      rows={2}
+                      minHeight="60px"
+                      showLists={true}
                     />
                   </div>
 
