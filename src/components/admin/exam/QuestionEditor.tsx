@@ -1,7 +1,6 @@
 import { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +21,7 @@ import {
   Type
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { MiniRichTextEditor } from '@/components/editor/MiniRichTextEditor';
 
 export interface Question {
   id?: string;
@@ -251,11 +251,12 @@ export const QuestionEditor = ({
                   </Button>
                 </div>
               </div>
-              <Textarea
+              <MiniRichTextEditor
                 value={question.question_text}
-                onChange={(e) => onUpdate(index, 'question_text', e.target.value)}
+                onChange={(value) => onUpdate(index, 'question_text', value)}
                 placeholder="Nhập câu hỏi... (Hỗ trợ LaTeX: $công thức$)"
-                rows={3}
+                minHeight="80px"
+                showLists={false}
               />
               {question.question_image && (
                 <div className="relative inline-block">
@@ -341,11 +342,12 @@ export const QuestionEditor = ({
             {/* Explanation */}
             <div className="space-y-2">
               <Label>Giải thích (tùy chọn)</Label>
-              <Textarea
+              <MiniRichTextEditor
                 value={question.explanation}
-                onChange={(e) => onUpdate(index, 'explanation', e.target.value)}
+                onChange={(value) => onUpdate(index, 'explanation', value)}
                 placeholder="Giải thích đáp án đúng..."
-                rows={2}
+                minHeight="60px"
+                showLists={true}
               />
             </div>
           </CardContent>
