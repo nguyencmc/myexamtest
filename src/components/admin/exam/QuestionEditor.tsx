@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Check } from 'lucide-react';
+import { Check, FileEdit, Type as TypeIcon } from 'lucide-react';
 import {
   Collapsible,
   CollapsibleContent,
@@ -23,6 +23,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { RichTextEditor } from '@/components/editor/RichTextEditor';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { Textarea } from '@/components/ui/textarea';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface Question {
   id?: string;
@@ -69,6 +71,7 @@ export const QuestionEditor = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentUploadField, setCurrentUploadField] = useState<string>('');
   const { toast } = useToast();
+  const [useRichEditor, setUseRichEditor] = useState(false);
 
   const optionLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
   
@@ -165,6 +168,45 @@ export const QuestionEditor = ({
     onUpdate(index, field, currentValue + formulaTemplate);
   };
 
+  // Handle image upload for RichTextEditor
+  const handleRichEditorImageUpload = async (file: File): Promise<string> => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    
+    const ext = file.name.split('.').pop();
+    const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const fileName = `${year}/${month}/${day}/${uniqueId}.${ext}`;
+    
+    const { data, error } = await supabase.storage
+      .from('question-images')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (error) {
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể tải ảnh lên',
+        variant: 'destructive',
+      });
+      throw new Error(error.message);
+    }
+
+    const { data: urlData } = supabase.storage
+      .from('question-images')
+      .getPublicUrl(data.path);
+
+    toast({
+      title: 'Thành công',
+      description: 'Đã tải ảnh lên',
+    });
+
+    return urlData.publicUrl;
+  };
+
   return (
     <TooltipProvider>
     <Card className="border-border/50 overflow-hidden">
@@ -228,6 +270,25 @@ export const QuestionEditor = ({
               <div className="flex items-center justify-between">
                 <Label>Nội dung câu hỏi *</Label>
                 <div className="flex gap-1">
+                  <Button
+                    type="button"
+                    variant={useRichEditor ? "default" : "outline"}
+                    size="sm"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => setUseRichEditor(!useRichEditor)}
+                  >
+                    {useRichEditor ? (
+                      <>
+                        <TypeIcon className="w-3 h-3 mr-1" />
+                        Đơn giản
+                      </>
+                    ) : (
+                      <>
+                        <FileEdit className="w-3 h-3 mr-1" />
+                        Nâng cao
+                      </>
+                    )}
+                  </Button>
                   {onImageUpload && (
                     <Button
                       type="button"
@@ -241,24 +302,36 @@ export const QuestionEditor = ({
                       Ảnh
                     </Button>
                   )}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 px-2 text-xs"
-                    onClick={() => insertFormula('question_text')}
-                  >
-                    <Type className="w-3 h-3 mr-1" />
-                    Công thức
-                  </Button>
+                  {!useRichEditor && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs"
+                      onClick={() => insertFormula('question_text')}
+                    >
+                      <Type className="w-3 h-3 mr-1" />
+                      Công thức
+                    </Button>
+                  )}
                 </div>
               </div>
-              <RichTextEditor
-                value={question.question_text}
-                onChange={(value) => onUpdate(index, 'question_text', value)}
-                placeholder="Nhập câu hỏi... (Hỗ trợ LaTeX: $công thức$)"
-                minHeight="120px"
-              />
+              {useRichEditor ? (
+                <RichTextEditor
+                  value={question.question_text}
+                  onChange={(value) => onUpdate(index, 'question_text', value)}
+                  placeholder="Nhập câu hỏi... (Hỗ trợ LaTeX: $công thức$)"
+                  minHeight="150px"
+                  onImageUpload={handleRichEditorImageUpload}
+                />
+              ) : (
+                <Textarea
+                  value={question.question_text}
+                  onChange={(e) => onUpdate(index, 'question_text', e.target.value)}
+                  placeholder="Nhập câu hỏi... (Hỗ trợ LaTeX: $công thức$)"
+                  className="min-h-[80px] resize-none"
+                />
+              )}
               {question.question_image && (
                 <div className="relative inline-block">
                   <img 
@@ -342,13 +415,25 @@ export const QuestionEditor = ({
 
             {/* Explanation */}
             <div className="space-y-2">
-              <Label>Giải thích (tùy chọn)</Label>
-              <RichTextEditor
-                value={question.explanation}
-                onChange={(value) => onUpdate(index, 'explanation', value)}
-                placeholder="Giải thích đáp án đúng..."
-                minHeight="100px"
-              />
+              <div className="flex items-center justify-between">
+                <Label>Giải thích (tùy chọn)</Label>
+              </div>
+              {useRichEditor ? (
+                <RichTextEditor
+                  value={question.explanation}
+                  onChange={(value) => onUpdate(index, 'explanation', value)}
+                  placeholder="Giải thích đáp án đúng..."
+                  minHeight="120px"
+                  onImageUpload={handleRichEditorImageUpload}
+                />
+              ) : (
+                <Textarea
+                  value={question.explanation}
+                  onChange={(e) => onUpdate(index, 'explanation', e.target.value)}
+                  placeholder="Giải thích đáp án đúng..."
+                  className="min-h-[60px] resize-none"
+                />
+              )}
             </div>
           </CardContent>
         </CollapsibleContent>

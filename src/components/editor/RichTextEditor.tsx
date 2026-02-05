@@ -1,4 +1,5 @@
 import React, { useRef, useCallback } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -36,6 +37,8 @@ import {
   Superscript,
   Highlighter,
   Palette,
+  Upload,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -51,6 +54,7 @@ interface RichTextEditorProps {
   placeholder?: string;
   className?: string;
   minHeight?: string;
+  onImageUpload?: (file: File) => Promise<string>;
 }
 
 const FONT_SIZES = [
@@ -123,10 +127,13 @@ export function RichTextEditor({
   placeholder = "Nhập nội dung...",
   className,
   minHeight = "300px",
+  onImageUpload,
 }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [linkUrl, setLinkUrl] = React.useState("");
   const [imageUrl, setImageUrl] = React.useState("");
+  const [isUploading, setIsUploading] = useState(false);
 
   const execCommand = useCallback((command: string, value?: string) => {
     document.execCommand(command, false, value);
@@ -162,6 +169,33 @@ export function RichTextEditor({
     }
   }, [imageUrl, execCommand]);
 
+  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !onImageUpload) return;
+
+    // Validate file
+    if (!file.type.startsWith('image/')) {
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const url = await onImageUpload(file);
+      execCommand("insertImage", url);
+    } catch (error) {
+      console.error('Upload failed:', error);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  }, [onImageUpload, execCommand]);
+
   const handlePaste = useCallback((e: React.ClipboardEvent) => {
     e.preventDefault();
     const text = e.clipboardData.getData("text/plain");
@@ -171,6 +205,15 @@ export function RichTextEditor({
 
   return (
     <div className={cn("border rounded-lg overflow-hidden bg-background", className)}>
+      {/* Hidden file input for image upload */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        accept="image/*"
+        onChange={handleFileSelect}
+      />
+      
       {/* Toolbar */}
       <div className="border-b bg-muted/30 p-1 flex flex-wrap items-center gap-0.5">
         {/* Undo/Redo */}
@@ -394,6 +437,37 @@ export function RichTextEditor({
               <Button size="sm" onClick={insertImage} className="w-full">
                 Chèn
               </Button>
+              {onImageUpload && (
+                <>
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-popover px-2 text-muted-foreground">hoặc</span>
+                    </div>
+                  </div>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="w-full"
+                  >
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Đang tải...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Tải ảnh lên
+                      </>
+                    )}
+                  </Button>
+                </>
+              )}
             </div>
           </PopoverContent>
         </Popover>
