@@ -21,7 +21,8 @@ import {
   Type
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { MiniRichTextEditor } from '@/components/editor/MiniRichTextEditor';
+import { RichTextEditor } from '@/components/editor/RichTextEditor';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 export interface Question {
   id?: string;
@@ -165,6 +166,7 @@ export const QuestionEditor = ({
   };
 
   return (
+    <TooltipProvider>
     <Card className="border-border/50 overflow-hidden">
       <input
         type="file"
@@ -251,12 +253,11 @@ export const QuestionEditor = ({
                   </Button>
                 </div>
               </div>
-              <MiniRichTextEditor
+              <RichTextEditor
                 value={question.question_text}
                 onChange={(value) => onUpdate(index, 'question_text', value)}
                 placeholder="Nhập câu hỏi... (Hỗ trợ LaTeX: $công thức$)"
-                minHeight="80px"
-                showLists={false}
+                minHeight="120px"
               />
               {question.question_image && (
                 <div className="relative inline-block">
@@ -342,18 +343,18 @@ export const QuestionEditor = ({
             {/* Explanation */}
             <div className="space-y-2">
               <Label>Giải thích (tùy chọn)</Label>
-              <MiniRichTextEditor
+              <RichTextEditor
                 value={question.explanation}
                 onChange={(value) => onUpdate(index, 'explanation', value)}
                 placeholder="Giải thích đáp án đúng..."
-                minHeight="60px"
-                showLists={true}
+                minHeight="100px"
               />
             </div>
           </CardContent>
         </CollapsibleContent>
       </Collapsible>
     </Card>
+    </TooltipProvider>
   );
 };
 
